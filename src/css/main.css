@@ -1,0 +1,404 @@
+/* ==========================================================================
+   AURA-NIÑO AGRO 2026 - CORE DESIGN SYSTEM
+   Theme: Ultra-Modern Agro-Meteorological Cyber Radar (Dark Glassmorphism)
+   ========================================================================== */
+
+:root {
+  /* Color Palette */
+  --bg-dark-0: #070a11;
+  --bg-dark-1: #0d131f;
+  --bg-dark-2: #141d30;
+  --bg-dark-3: #1c2842;
+  --bg-card: rgba(19, 29, 48, 0.75);
+  --bg-card-hover: rgba(28, 41, 68, 0.85);
+  --bg-glass: rgba(13, 20, 33, 0.72);
+  --bg-glass-heavy: rgba(10, 16, 27, 0.92);
+
+  /* Border & Glass Accents */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(6, 182, 212, 0.4);
+  --border-accent: rgba(16, 185, 129, 0.4);
+
+  /* Brand Accents */
+  --color-emerald: #10b981;
+  --color-emerald-light: #34d399;
+  --color-emerald-glow: rgba(16, 185, 129, 0.3);
+
+  --color-cyan: #06b6d4;
+  --color-cyan-light: #22d3ee;
+  --color-cyan-glow: rgba(6, 182, 212, 0.3);
+
+  --color-blue: #3b82f6;
+  --color-blue-light: #60a5fa;
+
+  --color-amber: #f59e0b;
+  --color-amber-light: #fbbf24;
+  --color-amber-glow: rgba(245, 158, 11, 0.3);
+
+  --color-red: #ef4444;
+  --color-red-light: #f87171;
+  --color-red-glow: rgba(239, 68, 68, 0.35);
+
+  --color-purple: #a855f7;
+
+  /* Text Colors */
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --text-bright: #ffffff;
+
+  /* Typography */
+  --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Shadows & Glows */
+  --shadow-hud: 0 16px 36px -8px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border-subtle);
+  --shadow-glow-cyan: 0 0 20px rgba(6, 182, 212, 0.25);
+  --shadow-glow-red: 0 0 20px rgba(239, 68, 68, 0.3);
+  --shadow-glow-emerald: 0 0 20px rgba(16, 185, 129, 0.25);
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --trans-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --trans-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --trans-smooth: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-dark-0);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography styles */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-bright);
+}
+
+p {
+  color: var(--text-muted);
+}
+
+code, .mono {
+  font-family: var(--font-mono);
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ==========================================================================
+   APP HEADER
+   ========================================================================== */
+
+.app-header {
+  position: relative;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 20px;
+  background: var(--bg-glass-heavy);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-subtle);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon-wrapper {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.1));
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-glow-emerald);
+}
+
+.logo-icon {
+  width: 26px;
+  height: 26px;
+  color: var(--color-emerald-light);
+}
+
+.logo-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: linear-gradient(90deg, #ffffff 0%, #a7f3d0 60%, #67e8f9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-pro {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(6, 182, 212, 0.15);
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  color: var(--color-cyan-light);
+  letter-spacing: 0.05em;
+  -webkit-text-fill-color: var(--color-cyan-light);
+}
+
+.logo-subtitle {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+/* Location Selector in Header */
+.location-quick-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 4px 10px;
+}
+
+.quick-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.form-select {
+  background: var(--bg-dark-2);
+  color: var(--text-bright);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  font-family: var(--font-main);
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--trans-fast);
+}
+
+.form-select:hover, .form-select:focus {
+  border-color: var(--color-cyan);
+}
+
+/* Telemetry Pills */
+.telemetry-pill {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  min-width: 130px;
+}
+
+.telemetry-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.telemetry-value {
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.telemetry-detail {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Pulse indicator dots */
+.pulse-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulseLight 1.8s infinite;
+}
+
+.pulsing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-cyan-light);
+  display: inline-block;
+  margin-right: 4px;
+  animation: pulseDot 1.5s infinite;
+}
+
+@keyframes pulseLight {
+  0% { transform: scale(0.95); opacity: 0.7; }
+  50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 10px currentColor; }
+  100% { transform: scale(0.95); opacity: 0.7; }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; box-shadow: 0 0 8px var(--color-cyan-light); }
+}
+
+/* ==========================================================================
+   APP WORKSPACE GRID LAYOUT
+   ========================================================================== */
+
+.app-workspace {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 64px);
+  display: flex;
+  overflow: hidden;
+}
+
+/* Center Map Viewport */
+.map-viewport-container {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  background: #06090e;
+}
+
+.interactive-map {
+  width: 100%;
+  height: 100%;
+  background: #080c14;
+}
+
+/* HUD Panels (Left and Right overlays) */
+.hud-panel {
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-hud);
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: transform var(--trans-smooth), opacity var(--trans-smooth);
+}
+
+.left-hud {
+  left: 14px;
+  width: 320px;
+  padding: 16px;
+  gap: 16px;
+}
+
+.right-hud {
+  right: 14px;
+  width: 420px;
+  padding: 16px;
+}
+
+/* Utilities */
+.text-red { color: var(--color-red-light); }
+.text-green { color: var(--color-emerald-light); }
+.text-cyan { color: var(--color-cyan-light); }
+.text-blue { color: var(--color-blue-light); }
+.text-amber { color: var(--color-amber-light); }
+.text-purple { color: var(--color-purple); }
+
+.bg-red { background: var(--color-red); }
+.bg-amber { background: var(--color-amber); }
+.bg-blue { background: var(--color-blue); }
+.bg-green { background: var(--color-emerald); }
+
+.bg-red-trans { background: rgba(239, 68, 68, 0.15); }
+.bg-blue-trans { background: rgba(59, 130, 246, 0.15); }
+.bg-cyan-trans { background: rgba(6, 182, 212, 0.15); }
+.bg-emerald-trans { background: rgba(16, 185, 129, 0.15); }
+.bg-amber-trans { background: rgba(245, 158, 11, 0.15); }
+
+.w-100 { width: 100%; }
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.d-none { display: none !important; }
+
+.icon-xs { width: 14px; height: 14px; }
+.icon-sm { width: 18px; height: 18px; }
+.icon-md { width: 22px; height: 22px; }
+
+/* Micro-animations */
+.spin-slow {
+  transform-origin: center;
+  animation: spin 20s linear infinite;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+.spin-on-click:active {
+  animation: spin 0.6s linear infinite;
+}
