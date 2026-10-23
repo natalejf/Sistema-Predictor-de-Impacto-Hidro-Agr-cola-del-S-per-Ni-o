@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Predictor de Impacto Hidro-Agrícola del Súper Niño (SPIHA-Niño)</title>
+  <meta name="description" content="Sistema Predictor de Impacto Hidro-Agrícola del Súper Niño en Argentina. Monitoreo en tiempo real, análisis de relieve, napas freáticas, riesgo de anegamiento y recomendaciones agronómicas para productores locales.">
+  
+  <!-- Google Fonts: Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- Main Styles -->
+  <script type="module" crossorigin src="./assets/index-DiilfKxW.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-B4E024P3.css">
+</head>
+<body class="dark-theme">
+  <!-- Top Navigation & Live Telemetry Bar -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-group">
+        <div class="logo-icon-wrapper">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+            <circle cx="12" cy="12" r="5" stroke-dasharray="2 2" class="spin-slow"/>
+            <path d="M17.5 19H9a5 5 0 0 1-5-5c0-2.3 1.5-4.2 3.6-4.8.4-3 3-5.2 6.4-5.2 3.6 0 6.6 2.6 6.9 6.2 1.8.6 3.1 2.3 3.1 4.3 0 2.5-2 4.5-4.5 4.5z" fill="rgba(16, 185, 129, 0.15)" stroke="#10b981"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="logo-title">SPIHA-NIÑO <span class="badge-pro">AGRO 2026</span></h1>
+          <p class="logo-subtitle">Sistema Predictor de Impacto Hidro-Agrícola del Súper Niño</p>
+        </div>
+      </div>
+
+      <!-- Quick Location Selector -->
+      <div class="location-quick-select">
+        <label for="locationSelector" class="quick-label">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Región Clave:
+        </label>
+        <select id="locationSelector" class="form-select">
+          <option value="necochea" selected>📍 Necochea (Sudeste Bs.As. - Cuenca Quequén)</option>
+          <option value="tres_arroyos">📍 Tres Arroyos (Sur Pampeano)</option>
+          <option value="balcarce">📍 Balcarce / Tandil (Mar y Sierras)</option>
+          <option value="pergamino">📍 Pergamino (Zona Núcleo Norte)</option>
+          <option value="pehuajo">📍 Pehuajó / 9 de Julio (Cuenca Salado)</option>
+          <option value="venado_tuerto">📍 Venado Tuerto (Sur Santa Fe)</option>
+          <option value="rosario">📍 Rosario / Litoral Sur</option>
+          <option value="gualeguaychu">📍 Gualeguaychú (Entre Ríos)</option>
+          <option value="corrientes">📍 Corrientes (Litoral Norte)</option>
+          <option value="rio_cuarto">📍 Río Cuarto (Córdoba Sur)</option>
+        </select>
+        <button id="btnFocusNecochea" class="btn btn-outline-cyan btn-sm" title="Foco inmediato en Necochea">
+          <span class="pulsing-dot"></span> Foco Necochea
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Telemetry Status Ticker -->
+    <div class="header-right">
+      <div class="telemetry-pill">
+        <span class="telemetry-label">ESTADO ENSO</span>
+        <span class="telemetry-value text-red" id="telemetryEnsoBadge">
+          <span class="pulse-indicator bg-red"></span> SÚPER NIÑO ACTIVO
+        </span>
+        <span class="telemetry-detail" id="telemetryOniVal">ONI: +2.4 °C</span>
+      </div>
+
+      <div class="telemetry-pill">
+        <span class="telemetry-label">API CLIMÁTICA</span>
+        <span class="telemetry-value text-green" id="telemetryApiStatus">
+          <span class="pulse-indicator bg-green"></span> OPEN-METEO ONLINE
+        </span>
+        <span class="telemetry-detail">DATOS EN VIVO</span>
+      </div>
+
+      <button id="btnExportReport" class="btn btn-primary btn-sm">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Informe Productor
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Application Workspace -->
+  <main class="app-workspace">
+    
+    <!-- Left Floating Overlay: Metric Layers & Scenario Selector -->
+    <aside class="hud-panel left-hud">
+      <div class="hud-header">
+        <h2 class="hud-title">
+          <svg class="icon-md text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          Capas de Análisis
+        </h2>
+        <span class="badge-mini">SIG</span>
+      </div>
+
+      <!-- Layer Selector -->
+      <div class="layer-buttons">
+        <button class="layer-btn active" data-layer="risk">
+          <div class="layer-icon-box bg-red-trans">
+            <svg class="icon-sm text-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div class="layer-info">
+            <span class="layer-title">Riesgo de Anegamiento & Inundación</span>
+            <span class="layer-desc">Topografía, relieve y capacidad de drenaje</span>
+          </div>
+        </button>
+
+        <button class="layer-btn" data-layer="rainfall">
+          <div class="layer-icon-box bg-blue-trans">
+            <svg class="icon-sm text-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/><path d="M8 19v2M8 13v2M12 21v2M12 15v2M16 19v2M16 13v2"/></svg>
+          </div>
+          <div class="layer-info">
+            <span class="layer-title">Anomalía de Precipitación</span>
+            <span class="layer-desc">% y mm acumulados sobre normal histórica</span>
+          </div>
+        </button>
+
+        <button class="layer-btn" data-layer="water_table">
+          <div class="layer-icon-box bg-cyan-trans">
+            <svg class="icon-sm text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div class="layer-info">
+            <span class="layer-title">Profundidad de Napa Freática</span>
+            <span class="layer-desc">Nivel de aguas subterráneas (m bajo superficie)</span>
+          </div>
+        </button>
+
+        <button class="layer-btn" data-layer="soil_moisture">
+          <div class="layer-icon-box bg-emerald-trans">
+            <svg class="icon-sm text-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+          </div>
+          <div class="layer-info">
+            <span class="layer-title">Humedad en Perfil de Suelo</span>
+            <span class="layer-desc">Saturación 0-100cm (% de capacidad de campo)</span>
+          </div>
+        </button>
+
+        <button class="layer-btn" data-layer="trafficability">
+          <div class="layer-icon-box bg-amber-trans">
+            <svg class="icon-sm text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </div>
+          <div class="layer-info">
+            <span class="layer-title">Alerta de Pérdida de Piso</span>
+            <span class="layer-desc">Transitabilidad para pulverizadoras y cosecha</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Scenarios Selector -->
+      <div class="scenario-section">
+        <label class="section-subheading">
+          <svg class="icon-sm text-purple" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1"/><path d="M18 8h4a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-4"/><circle cx="8" cy="12" r="2"/></svg>
+          Escenario Predictivo:
+        </label>
+        <div class="scenario-buttons">
+          <button class="scenario-btn active" data-scenario="super">
+            <span class="scen-badge bg-red">Súper Niño</span>
+            <span class="scen-title">Extremo (+2.5°C)</span>
+          </button>
+          <button class="scenario-btn" data-scenario="strong">
+            <span class="scen-badge bg-amber">Niño Fuerte</span>
+            <span class="scen-title">Canónico (+2.0°C)</span>
+          </button>
+          <button class="scenario-btn" data-scenario="modoki">
+            <span class="scen-badge bg-blue">Niño Modoki</span>
+            <span class="scen-title">Disipación Rápida</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Basemap Toggle & Relief Contours -->
+      <div class="basemap-controls">
+        <div class="switch-row">
+          <label for="chkBasemapSatellite" class="switch-label">
+            <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            Vista Satélite Esri
+          </label>
+          <input type="checkbox" id="chkBasemapSatellite" class="custom-switch">
+        </div>
+        <div class="switch-row">
+          <label for="chkShowBasins" class="switch-label">
+            <svg class="icon-xs text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 15c2.5-3 5-3 7.5 0s5 3 7.5 0 5-3 6-3"/><path d="M3 9c2.5-3 5-3 7.5 0s5 3 7.5 0 5-3 6-3"/></svg>
+            Red de Cuencas Hidrográficas
+          </label>
+          <input type="checkbox" id="chkShowBasins" class="custom-switch" checked>
+        </div>
+        <div class="switch-row">
+          <label for="chkShowRelief" class="switch-label">
+            <svg class="icon-xs text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20l7-12 5 7 6-10"/></svg>
+            Cotas de Relieve & Pendientes
+          </label>
+          <input type="checkbox" id="chkShowRelief" class="custom-switch" checked>
+        </div>
+      </div>
+
+      <!-- Live Probe Details -->
+      <div class="probe-card" id="probeCard">
+        <div class="probe-header">
+          <span class="probe-badge">SONDA ACTIVA</span>
+          <span class="probe-coords" id="probeCoords">-38.55°S, -58.74°W</span>
+        </div>
+        <h4 class="probe-location" id="probeLocationName">Necochea (Sudeste Bonaerense)</h4>
+        <div class="probe-stats-grid">
+          <div class="probe-stat">
+            <span class="p-stat-lbl">Riesgo Hidrológico</span>
+            <span class="p-stat-val text-red" id="probeRiskVal">88% (Muy Alto)</span>
+          </div>
+          <div class="probe-stat">
+            <span class="p-stat-lbl">Napa Freática</span>
+            <span class="p-stat-val text-cyan" id="probeNapaVal">0.65 m</span>
+          </div>
+          <div class="probe-stat">
+            <span class="p-stat-lbl">Lluvia Trimestre</span>
+            <span class="p-stat-val text-blue" id="probeRainVal">+85% (490 mm)</span>
+          </div>
+          <div class="probe-stat">
+            <span class="p-stat-lbl">Pérdida de Piso</span>
+            <span class="p-stat-val text-amber" id="probeTrafficVal">18 días/mes</span>
+          </div>
+        </div>
+        <button id="btnRefreshOpenMeteo" class="btn btn-ghost btn-xs w-100 mt-2">
+          <svg class="icon-xs spin-on-click" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          Actualizar con Open-Meteo API
+        </button>
+      </div>
+    </aside>
+
+    <!-- Center Workspace: Interactive Leaflet Map & Timeline Controls -->
+    <div class="map-viewport-container">
+      <div id="agroMap" class="interactive-map"></div>
+
+      <!-- Map Dynamic Legend -->
+      <div class="map-legend" id="mapLegend">
+        <div class="legend-title" id="legendTitle">Riesgo de Anegamiento & Inundación</div>
+        <div class="legend-scale">
+          <div class="legend-gradient" id="legendGradient"></div>
+          <div class="legend-labels">
+            <span id="legendMin">Bajo (0%)</span>
+            <span id="legendMid">Moderado (50%)</span>
+            <span id="legendMax">Crítico (100%)</span>
+          </div>
+        </div>
+        <div class="legend-note" id="legendNote">Calculado por pendiente topográfica, napa y anomalía pluvial</div>
+      </div>
+
+      <!-- Quick Notification Toast -->
+      <div class="map-toast" id="mapToast">
+        <svg class="icon-sm text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span id="mapToastMsg">Haz clic en cualquier punto del mapa para analizar el lote con Open-Meteo</span>
+      </div>
+
+      <!-- Floating Bottom Timeline & Simulation Scrubber -->
+      <div class="timeline-hud">
+        <div class="timeline-meta-row">
+          <div class="timeline-play-controls">
+            <button id="btnPrevMonth" class="btn-time-control" title="Mes Anterior">
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+            </button>
+            <button id="btnPlayPause" class="btn-time-control btn-play" title="Reproducir Evolución">
+              <svg class="icon-sm icon-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <svg class="icon-sm icon-pause d-none" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </button>
+            <button id="btnNextMonth" class="btn-time-control" title="Mes Siguiente">
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+            </button>
+          </div>
+
+          <div class="timeline-current-status">
+            <span class="timeline-phase-tag" id="timelinePhaseTag">FASE: DESARROLLO INICIAL</span>
+            <h3 class="timeline-display-date" id="timelineDisplayDate">Noviembre 2026 (Mes Actual)</h3>
+            <span class="timeline-enso-index" id="timelineEnsoIndex">Índice ONI: +2.35 °C (Súper Niño)</span>
+          </div>
+
+          <div class="timeline-view-modes">
+            <span class="timeline-counter"><span id="currentStepIdx">1</span> de 6 etapas</span>
+          </div>
+        </div>
+
+        <!-- Timeline Slider Bar -->
+        <div class="timeline-slider-track">
+          <input type="range" id="timelineRange" min="0" max="5" value="0" step="1" class="timeline-slider">
+          <div class="timeline-ticks">
+            <div class="t-tick active" data-step="0">
+              <span class="tick-dot"></span>
+              <span class="tick-lbl">Actual</span>
+              <span class="tick-sub">Nov</span>
+            </div>
+            <div class="t-tick" data-step="1">
+              <span class="tick-dot"></span>
+              <span class="tick-lbl">+1 Mes</span>
+              <span class="tick-sub">Dic (Pico Litoral)</span>
+            </div>
+            <div class="t-tick" data-step="2">
+              <span class="tick-dot"></span>
+              <span class="tick-lbl">+2 Meses</span>
+              <span class="tick-sub">Ene (Impacto Sur)</span>
+            </div>
+            <div class="t-tick" data-step="3">
+              <span class="tick-dot"></span>
+              <span class="tick-lbl">+3 Meses</span>
+              <span class="tick-sub">Feb/Mar (Cosecha)</span>
+            </div>
+            <div class="t-tick" data-step="4">
+              <span class="tick-dot"></span>
+              <span class="tick-lbl">+6 Meses</span>
+              <span class="tick-sub">May/Jun (Declive)</span>
+            </div>
+            <div class="t-tick" data-step="5">
+              <span class="tick-dot"></span>
+              <span class="tick-lbl">+12 Meses</span>
+              <span class="tick-sub">Post-Niño (2027)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Floating Overlay: Agro Decision Engine & Predictive Telemetry -->
+    <aside class="hud-panel right-hud">
+      <!-- Tabs for Right Panel -->
+      <div class="panel-tabs">
+        <button class="panel-tab-btn active" data-tab="decisions">
+          <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Recomendaciones Agro
+        </button>
+        <button class="panel-tab-btn" data-tab="telemetry">
+          <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Gráficos & Series
+        </button>
+        <button class="panel-tab-btn" data-tab="necochea">
+          <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+          Especial Necochea
+        </button>
+      </div>
+
+      <!-- Tab Content 1: Agronomic Recommendations -->
+      <div class="tab-pane active" id="tabDecisions">
+        <div class="pane-header">
+          <div>
+            <h3 class="pane-title" id="advisoryTitle">Decisiones Agrícolas: Necochea & Sudeste</h3>
+            <p class="pane-desc" id="advisorySub">Recomendaciones adaptativas ante Súper Niño</p>
+          </div>
+          <span class="badge-alert-high" id="advisoryRiskLevel">ALERTA ALTA</span>
+        </div>
+
+        <!-- Crop cards accordion -->
+        <div class="advisory-cards-container" id="advisoryCards">
+          <!-- Populated dynamically via agroEngine.js -->
+        </div>
+      </div>
+
+      <!-- Tab Content 2: Telemetry & Predictive Graphs -->
+      <div class="tab-pane" id="tabTelemetry">
+        <div class="pane-header">
+          <div>
+            <h3 class="pane-title">Telemetría Hidroclimática</h3>
+            <p class="pane-desc">Proyección estacional modelo dinámico</p>
+          </div>
+        </div>
+
+        <div class="chart-container-box">
+          <div class="chart-header-row">
+            <span class="chart-label">Precipitaciones Mensuales Proyectadas vs Promedio Histórico</span>
+            <span class="chart-badge text-blue">mm / mes</span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="chartRainfall"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container-box mt-3">
+          <div class="chart-header-row">
+            <span class="chart-label">Dinámica de Napa Freática (Profundidad)</span>
+            <span class="chart-badge text-cyan">Metros</span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="chartNapa"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container-box mt-3">
+          <div class="chart-header-row">
+            <span class="chart-label">Índice Oceánico El Niño (ONI) Proyectado</span>
+            <span class="chart-badge text-red">Anomalía SST (°C)</span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="chartEnso"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content 3: Necochea Special Deep-Dive -->
+      <div class="tab-pane" id="tabNecochea">
+        <div class="pane-header">
+          <div>
+            <h3 class="pane-title">Foco Estratégico: Necochea & Mar y Sierras</h3>
+            <p class="pane-desc">Cuenca del Río Quequén Grande y dinámica costera</p>
+          </div>
+          <span class="badge-pro">ZONA CRÍTICA</span>
+        </div>
+
+        <!-- Necochea Explanatory Alert -->
+        <div class="alert-box alert-info">
+          <div class="alert-icon">
+            <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </div>
+          <div class="alert-text">
+            <strong>¿Por qué lo peor del Súper Niño aún no llegó a Necochea?</strong>
+            <p>Históricamente en Argentina, los Súper Niños descargan su primera fase torrencial en la Mesopotamia y el Litoral (primavera). A medida que avanza el verano y el calentamiento solar desplaza la corriente en chorro subtropical hacia el sur, los pulsos de convección y frentes fríos húmedos chocan en el sudeste bonaerense entre <strong>enero y marzo</strong>, saturando la tosca superficial y colapsando el piso de cosecha.</p>
+          </div>
+        </div>
+
+        <!-- Topography & Drainage Profile -->
+        <div class="topography-card mt-3">
+          <h4 class="topography-title">
+            <svg class="icon-sm text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 22 22 22 12 2"/></svg>
+            Perfil Topográfico y Drenaje Local
+          </h4>
+          <p class="topography-desc">Desde las Sierras de Tandilia (180-250 msnm) hacia la Costa de Necochea (15 msnm), el Río Quequén Grande recibe el escurrimiento de más de 9.000 km². En eventos Súper Niño:</p>
+          
+          <ul class="necochea-facts-list">
+            <li>
+              <strong>Presencia de Tosca (Caliche):</strong> El horizonte petrocálcico a 40-80 cm frena la infiltración profunda; con lluvias >120 mm el suelo satura de inmediato formando lagunas temporarias en bajos.
+            </li>
+            <li>
+              <strong>Impacto en Trigo y Cebada:</strong> El llenado de grano y cosecha (diciembre/enero) enfrentará tormentas tardías. Alto riesgo de <em>Fusariosis</em> y granos brotados en espiga.
+            </li>
+            <li>
+              <strong>Girasol & Maíz:</strong> Riesgo de pérdida de stand de plantas por asfixia radicular en lotes quebrados con bajos sin canalización.
+            </li>
+            <li>
+              <strong>Logística Portuaria Puerto Quequén:</strong> Posibles cortes de caminos rurales de tierra hacia acopios y terminales portuarias.
+            </li>
+          </ul>
+
+          <div class="action-box">
+            <h5 class="action-heading">Plan de Acción Recomendado para Productores de Necochea:</h5>
+            <ol class="action-list">
+              <li>Mover silo-bolsas a cabeceras de loma con camino entoscado transitable.</li>
+              <li>Planificar fungicidas dobles en cebada y trigo con anticipación antes del temporal.</li>
+              <li>Monitorear la napa con barreno o freatímetro casero semanalmente.</li>
+              <li>Ajustar fertilización nitrogenada fraccionada en maíz para evitar lixiviación masiva.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- Producer Report Export Modal -->
+  <div class="modal-backdrop d-none" id="exportModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg class="icon-md text-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Informe Técnico: Sistema Predictor de Impacto Hidro-Agrícola del Súper Niño
+        </h3>
+        <button id="btnCloseModal" class="btn-close-modal">&times;</button>
+      </div>
+      <div class="modal-body" id="printableReport">
+        <!-- Rendered dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button id="btnPrintReport" class="btn btn-primary">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimir / Guardar como PDF
+        </button>
+        <button id="btnCancelModal" class="btn btn-ghost">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+</body>
+</html>
