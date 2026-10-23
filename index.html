@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Sistema Predictor de Impacto Hidro-Agrícola del Súper Niño (SPIHA-Niño)</title>
-  <meta name="description" content="Plataforma interactiva de monitoreo continuo y predicción del avance del Súper Niño, mapas de calor de riesgo de inundación por relieve y desborde de cuencas fluviales.">
+  <title>Sistema de Predicción del Super Niño (SPSN)</title>
+  <meta name="description" content="Sistema de Predicción del Super Niño (SPSN). Monitoreo continuo de la tormenta del Niño, avance temporal, mapas de calor de riesgo de inundación y desborde de cuencas fluviales.">
   
   <!-- Google Fonts: Outfit & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,50 +33,50 @@
           </svg>
         </div>
         <div class="logo-text-box">
-          <h1 class="logo-title">SPIHA-NIÑO <span class="badge-pro">PREMIUM</span></h1>
-          <p class="logo-subtitle">Predictor Hidro-Agrícola del Súper Niño</p>
+          <h1 class="logo-title">SPSN <span class="badge-pro">PREDICTOR</span></h1>
+          <p class="logo-subtitle">Sistema de Predicción del Super Niño</p>
         </div>
       </div>
 
-      <!-- Buscador Inteligente Global y Regional -->
+      <!-- Buscador Inteligente Global -->
       <div class="location-search-box">
         <div class="search-input-wrapper">
           <svg class="icon-sm text-cyan search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          <input type="text" id="globalSearchInput" class="search-input" placeholder="Buscar ciudad o lote (ej: Necochea, Pergamino, Salto...)" autocomplete="off">
+          <input type="text" id="globalSearchInput" class="search-input" placeholder="Buscar cualquier ciudad o campo..." autocomplete="off">
           <button id="btnClearSearch" class="btn-clear-search d-none">&times;</button>
         </div>
         <div id="searchResultsDropdown" class="search-results-dropdown d-none"></div>
       </div>
     </div>
 
-    <!-- Header Right Telemetry & Actions -->
+    <!-- Header Right Actions -->
     <div class="header-right">
-      <button id="btnFocusNecochea" class="btn btn-outline-cyan btn-sm btn-foco" title="Foco inmediato en Necochea">
+      <button id="btnFocusNecochea" class="btn btn-outline-cyan btn-sm btn-foco" title="Foco en Necochea">
         <span class="pulsing-dot"></span> Necochea
       </button>
 
       <div class="telemetry-pill d-none-mobile">
         <span class="telemetry-label">ESTADO ENSO</span>
         <span class="telemetry-value text-red">
-          <span class="pulse-indicator bg-red"></span> SÚPER NIÑO ACTIVO
+          <span class="pulse-indicator bg-red"></span> SÚPER NIÑO
         </span>
         <span class="telemetry-detail" id="telemetryOniVal">ONI: +2.4 °C</span>
       </div>
 
-      <!-- Toggle Drawer Buttons (Móvil y Desktop) -->
-      <button id="btnToggleMixer" class="btn btn-ghost btn-sm" title="Mezclador de Capas">
+      <!-- Botones de Cajones Móviles -->
+      <button id="btnToggleLayers" class="btn btn-ghost btn-sm active-btn" title="Capas">
         <svg class="icon-sm text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
         <span class="btn-txt-responsive">Capas</span>
       </button>
 
-      <button id="btnToggleInspector" class="btn btn-ghost btn-sm active-btn" title="Diagnóstico del Lote">
+      <button id="btnToggleInspector" class="btn btn-ghost btn-sm active-btn" title="Riesgo">
         <svg class="icon-sm text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <span class="btn-txt-responsive">Riesgo</span>
       </button>
 
-      <button id="btnExportReport" class="btn btn-primary btn-sm d-none-mobile" title="Informe para el Productor">
+      <button id="btnExportReport" class="btn btn-primary btn-sm d-none-mobile" title="Descargar Informe">
         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Informe PDF
       </button>
@@ -87,7 +87,7 @@
   <main class="app-workspace">
     <div id="agroMap" class="interactive-map"></div>
 
-    <!-- Floating Live Hover / Touch Risk Inspector -->
+    <!-- Floating Live Hover / Touch Risk Pill -->
     <div class="hover-risk-pill" id="hoverRiskPill">
       <div class="hover-indicator-dot" id="hoverDot"></div>
       <div class="hover-info">
@@ -96,88 +96,66 @@
       </div>
     </div>
 
-    <!-- Floating Mini Legend -->
+    <!-- Mini Legend -->
     <div class="map-mini-legend">
-      <div class="mini-legend-header">Riesgo de Inundación</div>
-      <div class="mini-legend-gradient"></div>
+      <div class="mini-legend-header" id="miniLegendHeader">Tormenta del Súper Niño</div>
+      <div class="mini-legend-gradient" id="miniLegendGradient"></div>
       <div class="mini-legend-labels">
-        <span>&lt;30% Seguro</span>
-        <span>50% Alerta</span>
-        <span>&gt;75% Desborde</span>
+        <span>Normal</span>
+        <span>Lluvias Fuertes</span>
+        <span>Tormenta Severa</span>
       </div>
     </div>
 
     <!-- ========================================================
-         LEFT DRAWER: MEZCLADOR DE CAPAS CONTINUAS (SUPERPOSICIÓN)
+         LEFT PANEL: SELECCIONADOR DE CAPAS (UNA POR UNA)
          ======================================================== -->
-    <aside class="hud-panel left-hud" id="panelMixer">
+    <aside class="hud-panel left-hud" id="panelLayers">
       <div class="hud-header">
         <h2 class="hud-title">
           <svg class="icon-sm text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-          Mezclador de Capas
+          Capas de Visualización
         </h2>
-        <button class="btn-close-panel" id="btnCloseMixer">&times;</button>
+        <button class="btn-close-panel" id="btnCloseLayers">&times;</button>
       </div>
 
-      <p class="panel-subtitle">Superpón y regula la opacidad de los mapas de calor y cuencas en tiempo real:</p>
+      <p class="panel-subtitle">Selecciona una capa para analizar el fenómeno en el mapa:</p>
 
-      <!-- Layer 1: Mapa de Calor de Inundación por Relieve -->
-      <div class="mixer-card">
-        <div class="mixer-card-top">
-          <label class="mixer-switch-label">
-            <input type="checkbox" id="chkFloodHeatmap" class="custom-switch" checked>
-            <span class="mixer-layer-name">⚠️ Riesgo de Inundación (Relieve)</span>
-          </label>
-          <span class="opacity-val" id="lblFloodOpacity">65%</span>
-        </div>
-        <p class="mixer-desc">Mapa de calor continuo según pendiente, relieve y napa</p>
-        <div class="slider-row">
-          <input type="range" id="rngFloodOpacity" min="10" max="100" value="65" class="mixer-slider">
-        </div>
+      <div class="layer-radio-group">
+        <button class="layer-radio-btn active" data-layer-mode="plume">
+          <div class="layer-radio-icon">🌊</div>
+          <div class="layer-radio-text">
+            <strong>Tormenta & Estela del Niño</strong>
+            <span>Corredor y avance del frente húmedo</span>
+          </div>
+        </button>
+
+        <button class="layer-radio-btn" data-layer-mode="flood">
+          <div class="layer-radio-icon">⚠️</div>
+          <div class="layer-radio-text">
+            <strong>Riesgo de Inundación (Relieve)</strong>
+            <span>Mapa de calor por pendiente y tosca</span>
+          </div>
+        </button>
+
+        <button class="layer-radio-btn" data-layer-mode="rivers">
+          <div class="layer-radio-icon">🏞️</div>
+          <div class="layer-radio-text">
+            <strong>Crecida y Desborde de Ríos</strong>
+            <span>Caudal de cuencas y valles aluviales</span>
+          </div>
+        </button>
+
+        <button class="layer-radio-btn" data-layer-mode="satellite">
+          <div class="layer-radio-icon">🛰️</div>
+          <div class="layer-radio-text">
+            <strong>Satélite de Alta Resolución</strong>
+            <span>Cartografía satelital Esri fotográfica</span>
+          </div>
+        </button>
       </div>
 
-      <!-- Layer 2: Pluma Atmosférica del Súper Niño -->
-      <div class="mixer-card">
-        <div class="mixer-card-top">
-          <label class="mixer-switch-label">
-            <input type="checkbox" id="chkEnsoPlume" class="custom-switch" checked>
-            <span class="mixer-layer-name">🌊 Pluma y Frentes del Súper Niño</span>
-          </label>
-          <span class="opacity-val" id="lblPlumeOpacity">50%</span>
-        </div>
-        <p class="mixer-desc">Avance del río atmosférico y masa de humedad cálida</p>
-        <div class="slider-row">
-          <input type="range" id="rngPlumeOpacity" min="10" max="100" value="50" class="mixer-slider">
-        </div>
-      </div>
-
-      <!-- Layer 3: Dinámica y Desborde de Ríos -->
-      <div class="mixer-card">
-        <div class="mixer-card-top">
-          <label class="mixer-switch-label">
-            <input type="checkbox" id="chkRiverFlow" class="custom-switch" checked>
-            <span class="mixer-layer-name">🏞️ Crecida y Desborde de Ríos</span>
-          </label>
-          <span class="opacity-val" id="lblRiverOpacity">90%</span>
-        </div>
-        <p class="mixer-desc">Caudal activo y llanuras aluviales desbordadas</p>
-        <div class="slider-row">
-          <input type="range" id="rngRiverOpacity" min="20" max="100" value="90" class="mixer-slider">
-        </div>
-      </div>
-
-      <!-- Layer 4: Cartografía Satelital Esri -->
-      <div class="mixer-card">
-        <div class="mixer-card-top">
-          <label class="mixer-switch-label">
-            <input type="checkbox" id="chkSatellite" class="custom-switch">
-            <span class="mixer-layer-name">🛰️ Vista Satelital de Alta Resolución</span>
-          </label>
-        </div>
-        <p class="mixer-desc">Alterna entre mapa base oscuro CARTO y satélite Esri</p>
-      </div>
-
-      <!-- Escenarios Climáticos -->
+      <!-- Escenarios ENSO -->
       <div class="scenario-section">
         <label class="section-subheading">Intensidad del Modelo ENSO:</label>
         <div class="scenario-buttons">
@@ -198,19 +176,19 @@
     </aside>
 
     <!-- ========================================================
-         RIGHT DRAWER: MONITOR EJECUTIVO DE RIESGO & ACCIÓN
+         RIGHT PANEL: MONITOR EJECUTIVO DE RIESGO
          ======================================================== -->
     <aside class="hud-panel right-hud" id="panelInspector">
       <div class="hud-header">
         <div class="inspector-title-group">
-          <span class="inspector-badge" id="inspStatusBadge">DIAGNÓSTICO EN TIEMPO REAL</span>
+          <span class="inspector-badge">MONITOR DE RIESGO</span>
           <h3 class="inspector-location" id="inspLocationTitle">Necochea (Sudeste Bonaerense)</h3>
           <p class="inspector-coords" id="inspCoords">-38.55°S, -58.74°W · Cuenca del Quequén</p>
         </div>
         <button class="btn-close-panel" id="btnCloseInspector">&times;</button>
       </div>
 
-      <!-- Medidor Central de Riesgo de Inundación -->
+      <!-- Medidor Central Circular -->
       <div class="risk-gauge-card">
         <div class="gauge-display-row">
           <div class="gauge-circle-container">
@@ -219,14 +197,14 @@
             </div>
           </div>
           <div class="gauge-meta">
-            <span class="gauge-caption">Probabilidad de Inundación y Anegamiento</span>
+            <span class="gauge-caption">Probabilidad de Inundación</span>
             <h4 class="gauge-status-text text-red" id="gaugeStatusText">CRÍTICO / ALTO RIESGO</h4>
-            <p class="gauge-note" id="gaugeNote">Pérdida de capacidad de drenaje en bajos</p>
+            <p class="gauge-note" id="gaugeNote">Pérdida de drenaje por tosca y saturación</p>
           </div>
         </div>
       </div>
 
-      <!-- 3 Métricas Críticas para el Productor -->
+      <!-- 4 Métricas Clave -->
       <div class="metric-tiles-grid">
         <div class="metric-tile">
           <div class="m-tile-icon">🌧️</div>
@@ -260,30 +238,10 @@
           </div>
         </div>
       </div>
-
-      <!-- Recomendaciones Directas para la Toma de Decisiones -->
-      <div class="actionable-advice-card">
-        <h4 class="advice-heading">
-          <svg class="icon-sm text-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-          Pautas Inmediatas para el Productor:
-        </h4>
-        <ul class="advice-bullets-list" id="inspAdviceList">
-          <li><strong>Cebada & Trigo:</strong> Iniciar trilla al 14% de humedad; riesgo severo de fusariosis y brotado en espiga.</li>
-          <li><strong>Maíz & Soja:</strong> Fraccionar nitrógeno para evitar lavado masivo; evitar siembras en cubetas bajas.</li>
-          <li><strong>Logística:</strong> Trasladar silo-bolsas a cabeceras de loma entoscada transitables hacia acopios y Puerto Quequén.</li>
-        </ul>
-      </div>
-
-      <div class="inspector-footer-actions">
-        <button id="btnOpenGuideModal" class="btn btn-ghost btn-sm w-100">
-          <svg class="icon-xs text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          ¿Cómo Interpretar este Mapa? (Guía Rápida)
-        </button>
-      </div>
     </aside>
 
     <!-- ========================================================
-         FLOATING TIMELINE SCRUBBER & ANIMATION ENGINE
+         FLOATING TIMELINE SCRUBBER
          ======================================================== -->
     <div class="timeline-hud">
       <div class="timeline-meta-row">
@@ -291,7 +249,7 @@
           <button id="btnPrevMonth" class="btn-time-control" title="Mes Anterior">
             <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
           </button>
-          <button id="btnPlayPause" class="btn-time-control btn-play" title="Reproducir Evolución del Súper Niño">
+          <button id="btnPlayPause" class="btn-time-control btn-play" title="Reproducir Avance del Súper Niño">
             <svg class="icon-sm icon-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             <svg class="icon-sm icon-pause d-none" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
           </button>
@@ -310,7 +268,6 @@
         </div>
       </div>
 
-      <!-- Timeline Interactive Slider Track -->
       <div class="timeline-slider-track">
         <input type="range" id="timelineRange" min="0" max="5" value="0" step="1" class="timeline-slider">
         <div class="timeline-ticks">
@@ -348,73 +305,38 @@
       </div>
     </div>
 
+    <!-- ========================================================
+         FOOTER: CRÉDITOS OFICIALES, APIS & LINKEDIN
+         ======================================================== -->
+    <footer class="app-credits-bar">
+      <div class="credits-left">
+        <strong>Sistema de Predicción del Super Niño (SPSN)</strong>
+        <span class="credits-sep">|</span>
+        <span>Creado por <strong class="author-name">Juan Francisco Natale</strong> con Inteligencia Artificial</span>
+      </div>
+      <div class="credits-right">
+        <span class="credits-apis">APIs: Open-Meteo · CARTO Basemaps · Esri World Imagery</span>
+        <span class="credits-sep">|</span>
+        <a href="https://www.linkedin.com/in/juan-francisco-natale-a35668433/" target="_blank" rel="noopener noreferrer" class="credits-linkedin-link">
+          <svg class="icon-xs" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+          Perfil de LinkedIn
+        </a>
+      </div>
+    </footer>
+
   </main>
 
-  <!-- ========================================================
-       MODAL 1: GUÍA DE LECTURA RÁPIDA PARA EL PRODUCTOR
-       ======================================================== -->
-  <div class="modal-backdrop d-none" id="guideModal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 class="modal-title">
-          <svg class="icon-md text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          ¿Cómo Leer y Predecir con este Mapa?
-        </h3>
-        <button id="btnCloseGuideModal" class="btn-close-modal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="guide-dialog-content">
-          <div class="guide-item">
-            <span class="g-num">1</span>
-            <div>
-              <strong>Mapas de Calor Dinámicos (Riesgo de Inundación):</strong>
-              <p>El color refleja la probabilidad de anegamiento en cada lote: <span class="text-green">Verde (&lt;30%)</span> es seguro, <span class="text-amber">Ámbar (50-70%)</span> indica suelo saturado, y <span class="text-red">Rojo (&gt;75%)</span> alerta de acumulación masiva de agua por baja pendiente o tosca superficial.</p>
-            </div>
-          </div>
-          <div class="guide-item">
-            <span class="g-num">2</span>
-            <div>
-              <strong>Línea de Tiempo y Avance del Súper Niño:</strong>
-              <p>Desplaza el control inferior o pulsa <strong>Play</strong>. Verás cómo la pluma de tormentas se desplaza en enero/febrero hacia el Sudeste Bonaerense (Necochea) y cómo los ríos (Quequén Grande, Salado, Paraná) pasan a estado de desborde activo.</p>
-            </div>
-          </div>
-          <div class="guide-item">
-            <span class="g-num">3</span>
-            <div>
-              <strong>Superponer y Mezclar Capas:</strong>
-              <p>En el botón <strong>Capas</strong> puedes activar o desactivar la pluma térmica, el mapa de calor de relieve y la crecida de ríos, ajustando su opacidad para ver el satélite debajo.</p>
-            </div>
-          </div>
-          <div class="guide-item">
-            <span class="g-num">4</span>
-            <div>
-              <strong>Inspeccionar cualquier campo o lote:</strong>
-              <p>Toca o haz clic sobre cualquier punto de Argentina o del mundo para ver el porcentaje exacto de inundación y los días sin piso para pulverizadoras y cosechadoras.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button id="btnGotItGuide" class="btn btn-primary">Entendido</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================================
-       MODAL 2: INFORME TÉCNICO EXPORTABLE / IMPRIMIBLE
-       ======================================================== -->
+  <!-- MODAL: INFORME TÉCNICO EXPORTABLE / IMPRIMIBLE -->
   <div class="modal-backdrop d-none" id="exportModal">
     <div class="modal-card">
       <div class="modal-header">
         <h3 class="modal-title">
           <svg class="icon-md text-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          Informe Técnico: Sistema Predictor de Impacto Hidro-Agrícola del Súper Niño
+          Informe Técnico: Sistema de Predicción del Super Niño (SPSN)
         </h3>
         <button id="btnCloseExportModal" class="btn-close-modal">&times;</button>
       </div>
-      <div class="modal-body" id="printableReport">
-        <!-- Generado dinámicamente -->
-      </div>
+      <div class="modal-body" id="printableReport"></div>
       <div class="modal-footer">
         <button id="btnPrintReport" class="btn btn-primary">
           <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -425,7 +347,7 @@
     </div>
   </div>
 
-  <!-- Main Application Script -->
+  <!-- Scripts -->
   <script type="module" src="./src/js/app.js"></script>
 </body>
 </html>

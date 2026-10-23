@@ -1,32 +1,23 @@
 /**
- * SISTEMA PREDICTOR DE IMPACTO HIDRO-AGRÍCOLA DEL SÚPER NIÑO (SPIHA-Niño)
+ * SISTEMA DE PREDICCIÓN DEL SUPER NIÑO (SPSN)
  * Controlador Cartográfico Geoespacial y Motor de Renderizado en Canvas Dinámico.
- * Permite superponer, mezclar y animar mapas de calor continuos globales y redes fluviales.
+ * Visualiza la estela y tormenta orgánica del Niño de forma continua sin bordes rectangulares.
  */
 
 import L from 'leaflet';
-import { KEY_LOCATIONS } from './api.js';
 import { TIMELINE_STEPS, MAJOR_RIVER_SYSTEMS, evaluatePointConditions } from './simulation.js';
 
 let mapInstance = null;
 let currentBasemap = null;
 let satelliteBasemap = null;
 
-// Capas de renderizado
+// Capas
 let heatCanvasLayer = null;
 let riversLayerGroup = null;
-let probesLayerGroup = null;
 let probeMarker = null;
 
-// Configuración de capas y mezcla (Opacidades y visibilidad)
-export const LayerMixerState = {
-  floodHeatmap: { enabled: true, opacity: 0.65 },
-  ensoPlume: { enabled: true, opacity: 0.50 },
-  riverFlow: { enabled: true, opacity: 0.90 },
-  soilMoisture: { enabled: false, opacity: 0.40 },
-  basemapSatellite: false,
-  showReliefContour: true
-};
+// Capa activa única (plume | flood | rivers | satellite)
+export let activeLayerMode = 'plume';
 
 let currentStepIndex = 0;
 let currentScenario = 'super';
@@ -39,25 +30,23 @@ const BASEMAP_DARK = `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}
 const BASEMAP_SATELLITE = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 
 /**
- * Inicializa el mapa Leaflet con soporte global, móvil y capas dinámicas
+ * Inicializa el mapa Leaflet
  */
 export function initAgroMap(containerId, onPointSelected, onHoverCoords) {
   onPointSelectedCallback = onPointSelected;
   onHoverCoordsCallback = onHoverCoords;
 
   mapInstance = L.map(containerId, {
-    center: [-38.0, -59.5], // Centrado en Buenos Aires / Necochea / Región Pampeana
-    zoom: 6,
+    center: [-38.0, -59.5], // Centrado en la región bonaerense / Necochea
+    zoom: 5,
     minZoom: 2,
     maxZoom: 18,
     zoomControl: false,
     worldCopyJump: true
   });
 
-  // Control de zoom adaptado para desktop y mobile
   L.control.zoom({ position: 'topright' }).addTo(mapInstance);
 
-  // Basemap oscuro de CARTO
   currentBasemap = L.tileLayer(BASEMAP_DARK, {
     attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap',
     subdomains: 'abcd',
@@ -69,18 +58,12 @@ export function initAgroMap(containerId, onPointSelected, onHoverCoords) {
     maxZoom: 19
   });
 
-  // Grupos de capas vectoriales y sondas
   riversLayerGroup = L.layerGroup().addTo(mapInstance);
-  probesLayerGroup = L.layerGroup().addTo(mapInstance);
 
-  // Inicializar capa Canvas continua para Mapas de Calor y Pluma del Niño
+  // Inicializar capa Canvas continua para la tormenta del Niño y riesgo
   initCanvasHeatmapLayer();
 
-  // Renderizar ríos iniciales y marcadores de cabecera
-  renderDynamicRivers();
-  renderKeyLocationPins();
-
-  // Eventos de interacción: Clic y movimiento de ratón
+  // Escuchar clics y movimiento del cursor
   mapInstance.on('click', (e) => {
     handleMapClick(e.latlng.lat, e.latlng.lng);
   });
@@ -92,17 +75,19 @@ export function initAgroMap(containerId, onPointSelected, onHoverCoords) {
     }
   });
 
-  // Re-renderizar el canvas cuando el mapa se mueva o cambie de zoom
   mapInstance.on('moveend zoomend', () => {
     redrawHeatmapCanvas();
   });
+
+  // Render inicial
+  redrawHeatmapCanvas();
+  renderDynamicRivers();
 
   return mapInstance;
 }
 
 /**
- * Crea una capa Canvas personalizada en Leaflet que cubre la pantalla
- * y renderiza el campo continuo de calor de inundaciones y pluma del Niño
+ * Canvas layer para renderizar la tormenta del Niño y el riesgo hídrico
  */
 function initCanvasHeatmapLayer() {
   const CanvasOverlay = L.Layer.extend({
@@ -112,7 +97,7 @@ function initCanvasHeatmapLayer() {
       this._canvas.style.position = 'absolute';
       this._canvas.style.top = '0';
       this._canvas.style.left = '0';
-      this._canvas.style.pointerEvents = 'none'; // Permite clics transparentes al mapa
+      this._canvas.style.pointerEvents = 'none';
       this._canvas.style.zIndex = '350';
 
       const size = this._map.getSize();
@@ -153,7 +138,8 @@ function initCanvasHeatmapLayer() {
 }
 
 /**
- * Renderizado de alto rendimiento en Canvas: Mapa de Calor Continuo y Pluma del Niño
+ * Renderizado continuo en Canvas: Estela y Tormenta del Niño o Riesgo de Inundación
+ * Dibuja campos radiales orgánicos y fluidos sin ningún corte cuadrado.
  */
 export function redrawHeatmapCanvas() {
   if (!heatCanvasLayer || !heatCanvasLayer._canvas || !mapInstance) return;
@@ -162,68 +148,93 @@ export function redrawHeatmapCanvas() {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const bounds = mapInstance.getBounds();
-  const north = bounds.getNorth();
-  const south = bounds.getSouth();
-  const east = bounds.getEast();
-  const west = bounds.getWest();
+  const step = TIMELINE_STEPS[currentStepIndex] || TIMELINE_STEPS[0];
+  const mult = step.scenarioMultipliers[currentScenario] || 1.35;
 
-  // Resolución de cuadrícula adaptada al zoom para máxima fluidez a 60 FPS
-  const zoom = mapInstance.getZoom();
-  const stepDeg = zoom >= 10 ? 0.08 : zoom >= 8 ? 0.16 : zoom >= 6 ? 0.35 : 0.75;
+  // ========================================================
+  // MODO 1: TORMENTA & ESTELA DEL SÚPER NIÑO (Río Atmosférico)
+  // ========================================================
+  if (activeLayerMode === 'plume') {
+    // Dibujar cada nodo de la trayectoria de la tormenta con gradientes radiales fluidos
+    step.stormTrajectory.forEach((node, i) => {
+      const centerPoint = mapInstance.latLngToContainerPoint([node.lat, node.lon]);
+      
+      // Radio en píxeles proporcional al zoom y al spread del nodo
+      const zoom = mapInstance.getZoom();
+      const radiusPx = (node.spread * Math.pow(2, zoom)) / 5.2;
 
-  const floodEnabled = LayerMixerState.floodHeatmap.enabled;
-  const floodOpacity = LayerMixerState.floodHeatmap.opacity;
-  const plumeEnabled = LayerMixerState.ensoPlume.enabled;
-  const plumeOpacity = LayerMixerState.ensoPlume.opacity;
+      if (radiusPx < 10) return;
 
-  if (!floodEnabled && !plumeEnabled) return;
+      const intensity = node.intensity * (mult / 1.35);
+      const gradient = ctx.createRadialGradient(
+        centerPoint.x, centerPoint.y, 0,
+        centerPoint.x, centerPoint.y, radiusPx
+      );
 
-  // Recorrer el área visible de la pantalla
-  for (let lat = south; lat <= north; lat += stepDeg) {
-    for (let lon = west; lon <= east; lon += stepDeg) {
-      const pred = evaluatePointConditions(lat, lon, currentStepIndex, currentScenario);
-      const point = mapInstance.latLngToContainerPoint([lat, lon]);
-
-      // Tamaño del píxel de interpolación
-      const pixelRadius = Math.max(12, Math.round(38 / Math.pow(1.15, 6 - zoom)));
-
-      // 1. Renderizar Pluma del Súper Niño (Atmospheric River)
-      if (plumeEnabled && pred.rainAnomalyPercent > 20) {
-        const pAlpha = (pred.rainAnomalyPercent / 140) * plumeOpacity;
-        const gradPlume = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, pixelRadius * 1.5);
-        gradPlume.addColorStop(0, `rgba(6, 182, 212, ${pAlpha})`);
-        gradPlume.addColorStop(0.5, `rgba(59, 130, 246, ${pAlpha * 0.5})`);
-        gradPlume.addColorStop(1, 'rgba(59, 130, 246, 0)');
-
-        ctx.fillStyle = gradPlume;
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, pixelRadius * 1.5, 0, Math.PI * 2);
-        ctx.fill();
+      // Paleta orgánica de radar meteorológico: Núcleo denso -> frente convectivo -> borde difuso
+      if (intensity > 0.85) {
+        // Núcleo activo (Tormenta severa)
+        gradient.addColorStop(0.0, `rgba(239, 68, 68, ${0.72 * intensity})`);   // Rojo núcleo
+        gradient.addColorStop(0.3, `rgba(245, 158, 11, ${0.58 * intensity})`);  // Ámbar
+        gradient.addColorStop(0.65, `rgba(6, 182, 212, ${0.35 * intensity})`);  // Cian lluvia
+        gradient.addColorStop(1.0, 'rgba(6, 182, 212, 0)');                    // Cero transparente
+      } else if (intensity > 0.55) {
+        // Lluvias moderadas a fuertes
+        gradient.addColorStop(0.0, `rgba(245, 158, 11, ${0.60 * intensity})`);
+        gradient.addColorStop(0.4, `rgba(6, 182, 212, ${0.45 * intensity})`);
+        gradient.addColorStop(0.75, `rgba(59, 130, 246, ${0.25 * intensity})`);
+        gradient.addColorStop(1.0, 'rgba(59, 130, 246, 0)');
+      } else {
+        // Estela difusa del frente húmedo
+        gradient.addColorStop(0.0, `rgba(6, 182, 212, ${0.40 * intensity})`);
+        gradient.addColorStop(0.5, `rgba(59, 130, 246, ${0.20 * intensity})`);
+        gradient.addColorStop(1.0, 'rgba(59, 130, 246, 0)');
       }
 
-      // 2. Renderizar Mapa de Calor de Riesgo de Inundación y Anegamiento
-      if (floodEnabled && pred.floodRiskPercent >= 25) {
-        const fAlpha = (pred.floodRiskPercent / 100) * floodOpacity;
-        const gradRisk = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, pixelRadius);
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(centerPoint.x, centerPoint.y, radiusPx, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  // ========================================================
+  // MODO 2: MAPA DE RIESGO DE INUNDACIÓN (Relieve y Napa)
+  // ========================================================
+  else if (activeLayerMode === 'flood') {
+    const bounds = mapInstance.getBounds();
+    const north = bounds.getNorth();
+    const south = bounds.getSouth();
+    const east = bounds.getEast();
+    const west = bounds.getWest();
+
+    const zoom = mapInstance.getZoom();
+    const stepDeg = zoom >= 9 ? 0.12 : zoom >= 7 ? 0.25 : 0.6;
+    const pixelRadius = Math.max(16, Math.round(42 / Math.pow(1.12, 6 - zoom)));
+
+    for (let lat = south - stepDeg; lat <= north + stepDeg; lat += stepDeg) {
+      for (let lon = west - stepDeg; lon <= east + stepDeg; lon += stepDeg) {
+        const pred = evaluatePointConditions(lat, lon, currentStepIndex, currentScenario);
+        if (pred.floodRiskPercent < 25) continue;
+
+        const point = mapInstance.latLngToContainerPoint([lat, lon]);
+        const alpha = (pred.floodRiskPercent / 100) * 0.70;
+        const grad = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, pixelRadius);
 
         if (pred.floodRiskPercent >= 75) {
-          // Crítico / Desborde activo (Rojo Carmesí)
-          gradRisk.addColorStop(0, `rgba(239, 68, 68, ${fAlpha})`);
-          gradRisk.addColorStop(0.6, `rgba(220, 38, 38, ${fAlpha * 0.7})`);
-          gradRisk.addColorStop(1, 'rgba(239, 68, 68, 0)');
+          grad.addColorStop(0, `rgba(239, 68, 68, ${alpha})`);
+          grad.addColorStop(0.7, `rgba(220, 38, 38, ${alpha * 0.5})`);
+          grad.addColorStop(1, 'rgba(239, 68, 68, 0)');
         } else if (pred.floodRiskPercent >= 50) {
-          // Alerta / Moderado a Alto (Ámbar / Naranja)
-          gradRisk.addColorStop(0, `rgba(245, 158, 11, ${fAlpha})`);
-          gradRisk.addColorStop(0.6, `rgba(217, 119, 6, ${fAlpha * 0.6})`);
-          gradRisk.addColorStop(1, 'rgba(245, 158, 11, 0)');
+          grad.addColorStop(0, `rgba(245, 158, 11, ${alpha})`);
+          grad.addColorStop(0.7, `rgba(217, 119, 6, ${alpha * 0.5})`);
+          grad.addColorStop(1, 'rgba(245, 158, 11, 0)');
         } else {
-          // Vigilancia (Cian / Azul Hídrico)
-          gradRisk.addColorStop(0, `rgba(6, 182, 212, ${fAlpha * 0.8})`);
-          gradRisk.addColorStop(1, 'rgba(6, 182, 212, 0)');
+          grad.addColorStop(0, `rgba(6, 182, 212, ${alpha * 0.8})`);
+          grad.addColorStop(1, 'rgba(6, 182, 212, 0)');
         }
 
-        ctx.fillStyle = gradRisk;
+        ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(point.x, point.y, pixelRadius, 0, Math.PI * 2);
         ctx.fill();
@@ -233,18 +244,18 @@ export function redrawHeatmapCanvas() {
 }
 
 /**
- * Dibuja la red fluvial y sus desbordes dinámicos según la etapa de la línea de tiempo
+ * Renderiza los ríos y desbordes
  */
 function renderDynamicRivers() {
   riversLayerGroup.clearLayers();
-  if (!LayerMixerState.riverFlow.enabled) return;
+
+  const showRivers = activeLayerMode === 'rivers' || activeLayerMode === 'flood';
+  if (!showRivers) return;
 
   const step = TIMELINE_STEPS[currentStepIndex] || TIMELINE_STEPS[0];
   const flowFactor = step.riverDischargeFactor;
-  const opacity = LayerMixerState.riverFlow.opacity;
 
   MAJOR_RIVER_SYSTEMS.forEach(river => {
-    // Verificar si esta cuenca está en su pico estacional
     const isPeak = Math.abs(currentStepIndex - river.criticalPeakStep) <= 1;
     const isSuperPeak = currentStepIndex === river.criticalPeakStep;
 
@@ -261,21 +272,19 @@ function renderDynamicRivers() {
       baseWeight = 5;
     }
 
-    // Dibujar llanura aluvial de inundación si hay desborde
     if (isSuperPeak) {
-      const overflowBuffer = L.polyline(river.points, {
+      L.polyline(river.points, {
         color: '#ef4444',
         weight: 18,
-        opacity: 0.25 * opacity,
+        opacity: 0.28,
         lineCap: 'round'
       }).addTo(riversLayerGroup);
     }
 
-    // Trazo principal del río
     const polyline = L.polyline(river.points, {
       color: riverColor,
       weight: baseWeight,
-      opacity: opacity,
+      opacity: 0.9,
       className: pulseClass
     });
 
@@ -283,9 +292,8 @@ function renderDynamicRivers() {
       <div style="font-family:'Outfit',sans-serif; padding:4px;">
         <strong style="color:${riverColor}; font-size:0.85rem;">🌊 ${river.name}</strong><br>
         <span style="color:#ffffff; font-size:0.75rem;">Desembocadura: ${river.mouthName}</span><br>
-        <span style="color:#cbd5e1; font-size:0.7rem;">Caudal Súper Niño: <strong>${Math.round(flowFactor * 100)}% de capacidad</strong></span><br>
-        <span style="color:${isSuperPeak ? '#ef4444' : '#38bdf8'}; font-size:0.7rem;">
-          ${isSuperPeak ? '⚠️ ¡ALERTA DE DESBORDE ACTIVO EN VALLES!' : 'Caudal en ascenso'}
+        <span style="color:${isSuperPeak ? '#ef4444' : '#38bdf8'}; font-weight:bold; font-size:0.7rem;">
+          ${isSuperPeak ? '⚠️ ¡DESBORDE ACTIVO EN VALLES BAJOS!' : 'Caudal en ascenso'}
         </span>
       </div>
     `, { sticky: true });
@@ -295,49 +303,16 @@ function renderDynamicRivers() {
 }
 
 /**
- * Renderiza los pines clave (Necochea destacado con pulso radar)
+ * Manejador al hacer clic en cualquier punto del mapa
+ * (Solo coloca la sonda activa del lote investigado)
  */
-function renderKeyLocationPins() {
-  probesLayerGroup.clearLayers();
-
-  Object.entries(KEY_LOCATIONS).forEach(([key, loc]) => {
-    const isNecochea = key === 'necochea';
-
-    const customIcon = L.divIcon({
-      className: `agro-marker-pin ${isNecochea ? 'agro-marker-necochea' : ''}`,
-      html: `
-        <div class="agro-marker-pulse" style="background:${isNecochea ? 'rgba(6,182,212,0.45)' : 'rgba(16,185,129,0.3)'};"></div>
-        <div class="agro-marker-core" style="background:${isNecochea ? '#06b6d4' : '#10b981'};"></div>
-      `,
-      iconSize: [30, 30],
-      iconAnchor: [15, 15]
-    });
-
-    const marker = L.marker([loc.lat, loc.lon], { icon: customIcon });
-
-    marker.bindTooltip(`
-      <strong style="color:#ffffff;">📍 ${loc.name}</strong><br>
-      <span style="color:#67e8f9; font-size:0.72rem;">Haz clic para diagnóstico completo</span>
-    `, { sticky: true });
-
-    marker.on('click', () => {
-      handleMapClick(loc.lat, loc.lon, key);
-    });
-
-    marker.addTo(probesLayerGroup);
-  });
-}
-
-/**
- * Manejador central al seleccionar cualquier punto o lote
- */
-function handleMapClick(lat, lon, knownLocationKey = null) {
+function handleMapClick(lat, lon) {
   if (!probeMarker) {
     const probeIcon = L.divIcon({
       className: 'agro-probe-marker',
-      html: `<div style="width:22px; height:22px; border-radius:50%; background:#ef4444; border:3px solid #ffffff; box-shadow:0 0 16px #ef4444;"></div>`,
-      iconSize: [22, 22],
-      iconAnchor: [11, 11]
+      html: `<div style="width:20px; height:20px; border-radius:50%; background:#ef4444; border:3px solid #ffffff; box-shadow:0 0 16px #ef4444;"></div>`,
+      iconSize: [20, 20],
+      iconAnchor: [10, 10]
     });
     probeMarker = L.marker([lat, lon], { icon: probeIcon }).addTo(mapInstance);
   } else {
@@ -345,71 +320,46 @@ function handleMapClick(lat, lon, knownLocationKey = null) {
   }
 
   if (onPointSelectedCallback) {
-    onPointSelectedCallback(lat, lon, knownLocationKey);
+    onPointSelectedCallback(lat, lon);
   }
 }
 
 /**
- * Vuela el mapa a una ubicación clave
+ * Vuela el mapa hacia cualquier coordenada arbitraria
  */
-export function flyToLocation(key) {
-  const loc = KEY_LOCATIONS[key];
-  if (!loc || !mapInstance) return;
-
-  const targetZoom = key === 'necochea' ? 9 : 8;
-  mapInstance.flyTo([loc.lat, loc.lon], targetZoom, {
-    duration: 1.4,
-    easeLinearity: 0.25
-  });
-
-  handleMapClick(loc.lat, loc.lon, key);
-}
-
-/**
- * Vuela el mapa hacia cualquier coordenada del mundo
- */
-export function flyToCoordinates(lat, lon, zoom = 9) {
+export function flyToCoordinates(lat, lon, zoom = 8) {
   if (!mapInstance) return;
   mapInstance.flyTo([lat, lon], zoom, {
     duration: 1.4,
     easeLinearity: 0.25
   });
-  handleMapClick(lat, lon, null);
+  handleMapClick(lat, lon);
 }
 
 /**
- * Actualiza el estado global de simulación (etapa temporal y escenario)
+ * Cambia la capa activa (uno a la vez según lo solicitado por el usuario)
  */
-export function updateSimulationTimeline(stepIdx, scenarioKey) {
-  currentStepIndex = stepIdx;
-  currentScenario = scenarioKey;
-  renderDynamicRivers();
-  redrawHeatmapCanvas();
-}
+export function setActiveLayerMode(mode) {
+  activeLayerMode = mode;
 
-/**
- * Alterna mapa satelital Esri
- */
-export function toggleSatelliteBasemap(showSatellite) {
-  LayerMixerState.basemapSatellite = showSatellite;
-  if (showSatellite) {
+  if (mode === 'satellite') {
     mapInstance.removeLayer(currentBasemap);
     satelliteBasemap.addTo(mapInstance);
   } else {
     mapInstance.removeLayer(satelliteBasemap);
     currentBasemap.addTo(mapInstance);
   }
+
+  renderDynamicRivers();
+  redrawHeatmapCanvas();
 }
 
 /**
- * Actualiza la opacidad y visibilidad de las capas mezclables
+ * Actualiza la etapa temporal
  */
-export function setLayerMixerProperty(layerName, property, value) {
-  if (LayerMixerState[layerName]) {
-    LayerMixerState[layerName][property] = value;
-    if (layerName === 'riverFlow') {
-      renderDynamicRivers();
-    }
-    redrawHeatmapCanvas();
-  }
+export function updateSimulationTimeline(stepIdx, scenarioKey) {
+  currentStepIndex = stepIdx;
+  currentScenario = scenarioKey;
+  renderDynamicRivers();
+  redrawHeatmapCanvas();
 }

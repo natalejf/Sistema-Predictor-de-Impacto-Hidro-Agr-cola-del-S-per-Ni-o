@@ -348,7 +348,7 @@ p {
 .hud-panel {
   position: absolute;
   top: 14px;
-  bottom: 96px; /* Para no tapar la timeline inferior */
+  bottom: 115px; /* Para no tapar la timeline inferior ni el footer */
   z-index: 500;
   display: flex;
   flex-direction: column;
@@ -375,6 +375,58 @@ p {
   width: 360px;
   padding: 16px;
   gap: 12px;
+}
+
+/* ==========================================================================
+   APP CREDITS FOOTER
+   ========================================================================== */
+
+.app-credits-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 28px;
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: rgba(6, 9, 15, 0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+}
+
+.credits-left, .credits-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.credits-sep {
+  opacity: 0.35;
+}
+
+.author-name {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.credits-linkedin-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-cyan-light);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color var(--trans-fast);
+}
+
+.credits-linkedin-link:hover {
+  color: #ffffff;
+  text-shadow: 0 0 8px var(--color-cyan);
 }
 
 /* Estado oculto de los paneles */
@@ -511,5 +563,15 @@ p {
 
   .map-mini-legend {
     display: none !important;
+  }
+
+  .app-credits-bar {
+    font-size: 0.58rem;
+    padding: 0 8px;
+    height: 30px;
+  }
+
+  .credits-apis {
+    display: none;
   }
 }

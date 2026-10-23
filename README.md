@@ -1,20 +1,26 @@
-# Sistema Predictor de Impacto Hidro-Agrícola del Súper Niño (SPIHA-Niño)
+# Sistema de Predicción del Super Niño (SPSN)
 
-> **Plataforma web geoespacial interactiva para la predicción, monitoreo y toma de decisiones agronómicas ante el fenómeno de Súper Niño (ENSO) en Argentina.**
+> **Plataforma web geoespacial interactiva para la predicción, monitoreo y análisis hidroclimático del avance y la estela del fenómeno de Súper Niño (ENSO).**
 
 🌐 **Acceso en línea (GitHub Pages):**  
 👉 **[https://natalejf.github.io/Sistema-Predictor-de-Impacto-Hidro-Agr-cola-del-S-per-Ni-o/](https://natalejf.github.io/Sistema-Predictor-de-Impacto-Hidro-Agr-cola-del-S-per-Ni-o/)**
 
 ---
 
+## 👨‍💻 Autor & Créditos
+* **Creador:** **Juan Francisco Natale**
+* **Desarrollado con:** Inteligencia Artificial (IA)
+* **Perfil de LinkedIn:** [https://www.linkedin.com/in/juan-francisco-natale-a35668433/](https://www.linkedin.com/in/juan-francisco-natale-a35668433/)
+* **APIs Integradas:**
+  - **Open-Meteo Weather API** (telemetría meteorológica y humedad de suelo en tiempo real)
+  - **CARTO Basemaps API** (cartografía base geoespacial oscura de alto rendimiento)
+  - **Esri World Imagery** (imágenes satelitales de alta resolución)
+
+---
+
 ## 🌾 Descripción del Proyecto
 
-El **Sistema Predictor de Impacto Hidro-Agrícola del Súper Niño (SPIHA-Niño)** es una herramienta tecnológica orientada a productores agrícolas, ingenieros agrónomos y cooperativas de la República Argentina.
-
-Integra modelos de simulación hidrológica, relieve topográfico, dinámica de napas freáticas y datos en tiempo real mediante APIs públicas y gratuitas de meteorología edáfica (**Open-Meteo**).
-
-### 🎯 Enfoque Especial en Necochea y Sudeste Bonaerense
-Históricamente, en eventos de Súper Niño, la máxima intensidad de lluvias no arriba de forma temprana a la Costa Atlántica y el Sudeste de Buenos Aires (suele impactar primero en la Mesopotamia durante la primavera). El pico crítico en el sur bonaerense se produce entre **enero y marzo**, cuando la conjunción de altas precipitaciones, la barrera subsuperficial de **tosca a 40-70 cm** y el drenaje hacia la **Cuenca del Río Quequén Grande** provocan anegamientos en bajos, colapso de piso de cosecha y brotado en espiga en cereales de invierno.
+El **Sistema de Predicción del Super Niño (SPSN)** es una herramienta tecnológica para visualizar el corredor atmosférico de la tormenta del Niño, su desplazamiento temporal en el Océano Pacífico y Sudamérica, mapas de calor de riesgo de inundación por relieve y dinámica de desborde de cuencas fluviales.
 
 ---
 

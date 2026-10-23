@@ -1,7 +1,7 @@
 /**
- * SISTEMA PREDICTOR DE IMPACTO HIDRO-AGRÍCOLA DEL SÚPER NIÑO (SPIHA-Niño)
- * Motor Físico y Matemático Continuo para Simulación Global y Sudamericana.
- * Evalúa topografía, pendientes, cuencas fluviales, napas y anomalías ENSO en tiempo real.
+ * SISTEMA DE PREDICCIÓN DEL SUPER NIÑO (SPSN)
+ * Motor Físico y Matemático de Pluma de Tormenta Continua y Riesgo Hídrico.
+ * Sin bordes rectangulares: modelado con campos Gaussianos de ríos atmosféricos y teleconexiones globales.
  */
 
 export const TIMELINE_STEPS = [
@@ -12,9 +12,15 @@ export const TIMELINE_STEPS = [
     phaseLabel: 'FASE 1: CONVERGENCIA INICIAL EN EL LITORAL',
     oniIndex: 2.35,
     scenarioMultipliers: { super: 1.35, strong: 1.0, modoki: 0.65 },
-    // Foco geográfico principal del pulso húmedo (lat, lon, radio en grados)
-    pulseCenter: [-28.0, -58.5],
-    pulseRadius: 8.0,
+    // Trayectoria del río atmosférico del Súper Niño (nodos de la pluma de tormenta)
+    stormTrajectory: [
+      { lat: 0.0, lon: -110.0, intensity: 0.90, spread: 14.0 },  // Pacífico Ecuatorial Central (Niño 3.4)
+      { lat: -5.0, lon: -85.0, intensity: 0.95, spread: 10.0 },   // Frente a Perú / Ecuador (Niño 1+2)
+      { lat: -16.0, lon: -68.0, intensity: 0.70, spread: 8.5 },   // Altiplano / Bolivia
+      { lat: -27.0, lon: -58.5, intensity: 1.00, spread: 7.5 },   // Foco activo: Litoral argentino / Paraguay
+      { lat: -34.0, lon: -59.5, intensity: 0.65, spread: 7.0 },   // Zona Núcleo norte
+      { lat: -38.5, lon: -58.7, intensity: 0.40, spread: 6.5 }    // Necochea / Sudeste (inicial suave)
+    ],
     riverDischargeFactor: 1.2
   },
   {
@@ -24,30 +30,47 @@ export const TIMELINE_STEPS = [
     phaseLabel: 'FASE 2: EXPANSIÓN A ZONA NÚCLEO Y SALADO',
     oniIndex: 2.48,
     scenarioMultipliers: { super: 1.45, strong: 1.1, modoki: 0.70 },
-    pulseCenter: [-33.5, -60.5],
-    pulseRadius: 9.5,
+    stormTrajectory: [
+      { lat: -1.0, lon: -108.0, intensity: 0.92, spread: 14.0 },
+      { lat: -6.0, lon: -84.0, intensity: 0.96, spread: 10.5 },
+      { lat: -20.0, lon: -66.0, intensity: 0.78, spread: 9.0 },
+      { lat: -31.5, lon: -60.0, intensity: 1.00, spread: 8.5 },   // Foco: Santa Fe / Entre Ríos
+      { lat: -35.5, lon: -60.5, intensity: 0.90, spread: 8.0 },   // Cuenca del Salado
+      { lat: -38.5, lon: -58.7, intensity: 0.65, spread: 7.0 }    // Necochea (aumento sostenido)
+    ],
     riverDischargeFactor: 1.6
   },
   {
     step: 2,
     monthKey: 'plus_2',
     dateLabel: 'Enero/Febrero 2027 (+2 Meses)',
-    phaseLabel: 'FASE 3: PICO MÁXIMO SÚPER NIÑO (IMPACTO SUR BONAERENSE)',
+    phaseLabel: 'FASE 3: PICO MÁXIMO (IMPACTO SUR BONAERENSE - NECOCHEA)',
     oniIndex: 2.58,
     scenarioMultipliers: { super: 1.60, strong: 1.2, modoki: 0.75 },
-    pulseCenter: [-38.0, -59.5], // Pico centrado en Sudeste Bonaerense / Necochea / Tandilia
-    pulseRadius: 10.5,
+    stormTrajectory: [
+      { lat: -2.0, lon: -105.0, intensity: 0.85, spread: 13.0 },
+      { lat: -8.0, lon: -83.0, intensity: 0.90, spread: 10.0 },
+      { lat: -25.0, lon: -64.0, intensity: 0.82, spread: 8.5 },
+      { lat: -34.0, lon: -61.0, intensity: 0.92, spread: 8.0 },
+      { lat: -38.5, lon: -58.7, intensity: 1.00, spread: 8.5 },   // ¡PICO MÁXIMO EN NECOCHEA / MAR Y SIERRAS!
+      { lat: -40.5, lon: -57.5, intensity: 0.75, spread: 7.5 }    // Frente oceánico Atlántico
+    ],
     riverDischargeFactor: 2.1
   },
   {
     step: 3,
     monthKey: 'plus_3',
     dateLabel: 'Marzo/Abril 2027 (+3 Meses)',
-    phaseLabel: 'FASE 4: COSECHA GRUESA & PERSISTENCIA DE AGUAS',
+    phaseLabel: 'FASE 4: COSECHA GRUESA & PERSISTENCIA DE AGUAS ALTAS',
     oniIndex: 2.15,
     scenarioMultipliers: { super: 1.30, strong: 1.0, modoki: 0.60 },
-    pulseCenter: [-35.0, -61.0],
-    pulseRadius: 9.0,
+    stormTrajectory: [
+      { lat: -1.0, lon: -102.0, intensity: 0.75, spread: 12.0 },
+      { lat: -6.0, lon: -82.0, intensity: 0.75, spread: 9.0 },
+      { lat: -33.0, lon: -60.0, intensity: 0.80, spread: 8.0 },
+      { lat: -37.5, lon: -59.5, intensity: 0.80, spread: 8.0 },
+      { lat: -41.0, lon: -56.0, intensity: 0.55, spread: 8.0 }
+    ],
     riverDischargeFactor: 1.7
   },
   {
@@ -56,9 +79,12 @@ export const TIMELINE_STEPS = [
     dateLabel: 'Mayo/Junio 2027 (+6 Meses)',
     phaseLabel: 'FASE 5: DECLIVE ESTACIONAL HACIA EL INVIERNO',
     oniIndex: 1.15,
-    scenarioMultipliers: { super: 0.90, strong: 0.7, modoki: 0.40 },
-    pulseCenter: [-30.0, -58.0],
-    pulseRadius: 6.0,
+    scenarioMultipliers: { super: 0.85, strong: 0.65, modoki: 0.35 },
+    stormTrajectory: [
+      { lat: 0.0, lon: -100.0, intensity: 0.45, spread: 10.0 },
+      { lat: -28.0, lon: -58.0, intensity: 0.50, spread: 7.0 },
+      { lat: -36.0, lon: -59.0, intensity: 0.40, spread: 6.5 }
+    ],
     riverDischargeFactor: 1.1
   },
   {
@@ -67,14 +93,16 @@ export const TIMELINE_STEPS = [
     dateLabel: 'Primavera 2027 (+12 Meses)',
     phaseLabel: 'FASE 6: SALIDA POST-NIÑO / TRANSICIÓN NEUTRAL',
     oniIndex: -0.15,
-    scenarioMultipliers: { super: 0.30, strong: 0.2, modoki: 0.10 },
-    pulseCenter: [-34.0, -60.0],
-    pulseRadius: 4.0,
+    scenarioMultipliers: { super: 0.20, strong: 0.15, modoki: 0.05 },
+    stormTrajectory: [
+      { lat: 0.0, lon: -100.0, intensity: 0.15, spread: 8.0 },
+      { lat: -34.0, lon: -60.0, intensity: 0.15, spread: 5.0 }
+    ],
     riverDischargeFactor: 0.9
   }
 ];
 
-// Red hidrográfica con caudales base y umbrales de desborde
+// Red hidrográfica principal (cuencas y valles aluviales)
 export const MAJOR_RIVER_SYSTEMS = [
   {
     id: 'quequen_grande',
@@ -87,21 +115,17 @@ export const MAJOR_RIVER_SYSTEMS = [
       [-38.35, -58.80],
       [-38.56, -58.71]
     ],
-    baseElevation: 18,
-    bankfullCapacityMm: 130,
-    criticalPeakStep: 2 // Enero/Febrero en Necochea
+    criticalPeakStep: 2
   },
   {
     id: 'quequen_salado',
     name: 'Río Quequén Salado',
-    mouthName: 'Claromecó / Balneario Marisol',
+    mouthName: 'Claromecó / Marisol',
     points: [
       [-37.8, -60.6],
       [-38.3, -60.4],
       [-38.9, -60.2]
     ],
-    baseElevation: 25,
-    bankfullCapacityMm: 125,
     criticalPeakStep: 2
   },
   {
@@ -114,8 +138,6 @@ export const MAJOR_RIVER_SYSTEMS = [
       [-35.8, -59.0],
       [-35.9, -57.5]
     ],
-    baseElevation: 12,
-    bankfullCapacityMm: 110,
     criticalPeakStep: 1
   },
   {
@@ -130,8 +152,6 @@ export const MAJOR_RIVER_SYSTEMS = [
       [-32.9, -60.6],
       [-34.2, -58.8]
     ],
-    baseElevation: 15,
-    bankfullCapacityMm: 160,
     criticalPeakStep: 1
   },
   {
@@ -144,8 +164,6 @@ export const MAJOR_RIVER_SYSTEMS = [
       [-31.8, -58.0],
       [-33.5, -58.4]
     ],
-    baseElevation: 20,
-    bankfullCapacityMm: 150,
     criticalPeakStep: 0
   },
   {
@@ -157,8 +175,6 @@ export const MAJOR_RIVER_SYSTEMS = [
       [-29.8, -52.0],
       [-30.0, -51.2]
     ],
-    baseElevation: 8,
-    bankfullCapacityMm: 140,
     criticalPeakStep: 0
   },
   {
@@ -170,60 +186,54 @@ export const MAJOR_RIVER_SYSTEMS = [
       [-5.1, -80.6],
       [-5.5, -80.8]
     ],
-    baseElevation: 30,
-    bankfullCapacityMm: 90,
     criticalPeakStep: 2
   }
 ];
 
 /**
- * Función matemática fundamental: evalúa en CUALQUIER punto del mundo (lat, lon)
- * el impacto del Súper Niño, el relieve, el riesgo de inundación y el desborde fluvial.
+ * Evalúa las condiciones en CUALQUIER punto del planeta mediante campos continuos suaves.
+ * Sin bordes rectangulares ni cortes artificiales.
  */
 export function evaluatePointConditions(lat, lon, stepIndex = 0, scenarioKey = 'super') {
   const step = TIMELINE_STEPS[stepIndex] || TIMELINE_STEPS[0];
   const mult = step.scenarioMultipliers[scenarioKey] || 1.35;
 
-  // 1. Teleconexión climática ENSO según latitud y longitud
-  const ensoAnomaly = calculateEnsoAnomalyField(lat, lon, step, mult);
+  // 1. Campo de intensidad continua de la estela / tormenta del Niño
+  const stormField = calculateContinuousStormField(lat, lon, step, mult);
 
   // 2. Modelo de relieve y pendiente topográfica
   const topography = estimateTopographyAndDrainage(lat, lon);
 
-  // 3. Proximidad a redes fluviales y desborde de cuencas
+  // 3. Proximidad a redes fluviales y desborde
   const riverImpact = calculateRiverOverflowProximity(lat, lon, stepIndex, step.riverDischargeFactor);
 
-  // 4. Dinámica de napa freática estimada (m bajo suelo)
-  let napaDepthM = topography.baseNapaM - (ensoAnomaly.rainAnomalyRatio * 1.35 * topography.retentionFactor);
+  // 4. Dinámica de napa freática (m bajo suelo)
+  let napaDepthM = topography.baseNapaM - (stormField.anomalyRatio * 1.3 * topography.retentionFactor);
   if (napaDepthM < 0.25) napaDepthM = 0.25;
   napaDepthM = Math.round(napaDepthM * 100) / 100;
 
-  // 5. ÍNDICE DE RIESGO DE INUNDACIÓN Y ANEGAMIENTO (0 a 100%)
-  // Combina: exceso de lluvia (35%) + pendiente baja (25%) + napa cercana (20%) + desborde de río (20%)
-  const rainScore = Math.min(100, Math.max(0, ensoAnomaly.rainAnomalyPercent * 0.75));
-  const slopeScore = topography.slopeRisk; // 0 (loma escurrida) a 100 (cubeta plana/bajo)
+  // 5. RIESGO DE INUNDACIÓN Y ANEGAMIENTO (0 a 100%)
+  const rainScore = Math.min(100, Math.max(0, stormField.rainAnomalyPercent * 0.75));
+  const slopeScore = topography.slopeRisk;
   const napaScore = Math.min(100, Math.max(0, (1 - (napaDepthM / 2.5)) * 100));
   const riverScore = riverImpact.overflowRiskPercent;
 
   let floodRiskPercent = (rainScore * 0.35) + (slopeScore * 0.25) + (napaScore * 0.20) + (riverScore * 0.20);
-  
-  // En Necochea / Tres Arroyos: la tosca a 40-70cm eleva el riesgo en tormentas
-  const isNecocheaZone = lat < -37.5 && lat > -39.0 && lon > -60.5 && lon < -58.0;
-  if (isNecocheaZone && ensoAnomaly.rainAnomalyPercent > 40) {
-    floodRiskPercent += 12; // Efecto tosca
+
+  // En Necochea / Sudeste Bonaerense: la tosca somera eleva el riesgo ante temporales
+  const isNecocheaZone = lat < -37.5 && lat > -39.2 && lon > -60.5 && lon < -58.0;
+  if (isNecocheaZone && stormField.rainAnomalyPercent > 35) {
+    floodRiskPercent += 14;
   }
 
   floodRiskPercent = Math.min(100, Math.max(5, Math.round(floodRiskPercent)));
 
-  // 6. Pérdida de piso agrícola (días por mes)
+  // 6. Días de pérdida de piso para maquinaria
   let trafficabilityLossDays = Math.round((floodRiskPercent / 100) * 22);
   if (trafficabilityLossDays > 24) trafficabilityLossDays = 24;
 
-  // 7. Humedad de suelo (% capacidad de campo)
   const soilMoisturePercent = Math.min(100, Math.round(55 + (floodRiskPercent * 0.45)));
-
-  // 8. Estado y recomendación directa simplificada
-  const statusInfo = getSimplifiedRiskStatus(floodRiskPercent, riverScore, isNecocheaZone, stepIndex);
+  const statusInfo = getSimplifiedRiskStatus(floodRiskPercent, riverScore);
 
   return {
     lat: Number(lat.toFixed(4)),
@@ -232,12 +242,12 @@ export function evaluatePointConditions(lat, lon, stepIndex = 0, scenarioKey = '
     stepLabel: step.dateLabel,
     phaseLabel: step.phaseLabel,
     oniIndex: step.oniIndex,
-    // Métricas principales directas
+    stormIntensity: stormField.intensity, // 0.0 a 1.0 (para el renderizado continuo)
     floodRiskPercent,
     statusLabel: statusInfo.label,
     statusColor: statusInfo.color,
-    rainAnomalyPercent: Math.round(ensoAnomaly.rainAnomalyPercent),
-    projectedRainMm: Math.round(topography.baseNormalRainMm * (1 + ensoAnomaly.rainAnomalyPercent / 100)),
+    rainAnomalyPercent: Math.round(stormField.rainAnomalyPercent),
+    projectedRainMm: Math.round(topography.baseNormalRainMm * (1 + stormField.rainAnomalyPercent / 100)),
     normalRainMm: topography.baseNormalRainMm,
     riverOverflowPercent: Math.round(riverScore),
     nearestRiverName: riverImpact.nearestRiverName,
@@ -245,112 +255,78 @@ export function evaluatePointConditions(lat, lon, stepIndex = 0, scenarioKey = '
     napaDepthM,
     soilMoisturePercent,
     trafficabilityLossDays,
-    isNecocheaZone,
-    // Recomendación ejecutiva breve
-    quickRecommendation: statusInfo.recommendation
+    isNecocheaZone
   };
 }
 
 /**
- * Campo continuo de anomalía ENSO basado en teleconexiones meteorológicas
+ * Calcula el campo de intensidad continua de la pluma de tormenta del Niño
+ * usando interpolación Gaussiana multi-nodo a lo largo de la corriente en chorro
  */
-function calculateEnsoAnomalyField(lat, lon, step, scenarioMultiplier) {
-  // Distancia angular al pulso estacional activo del Súper Niño
-  const dLat = lat - step.pulseCenter[0];
-  const dLon = lon - step.pulseCenter[1];
-  const dist = Math.hypot(dLat, dLon);
+export function calculateContinuousStormField(lat, lon, step, scenarioMultiplier) {
+  let maxField = 0;
 
-  // Intensidad Gaussiana del pulso regional
-  const gaussian = Math.exp(-Math.pow(dist / step.pulseRadius, 2));
+  // Suma de influencias Gaussianas suaves de cada nodo de la trayectoria
+  step.stormTrajectory.forEach(node => {
+    const dLat = (lat - node.lat);
+    const dLon = (lon - node.lon);
+    const distSq = (dLat * dLat) + (dLon * dLon);
+    const spreadSq = node.spread * node.spread;
 
-  // Base ENSO según la zona geográfica mundial
-  let baseRegionalAnomaly = 0;
+    const val = node.intensity * Math.exp(-distSq / (2 * spreadSq));
+    if (val > maxField) maxField = val;
+  });
 
-  // Cuenca del Plata y Región Pampeana (Teleconexión muy húmeda)
-  if (lat < -20 && lat > -42 && lon > -68 && lon < -50) {
-    baseRegionalAnomaly = 45 + (gaussian * 65);
-  }
-  // Costa de Perú y Ecuador (Niño Costero)
-  else if (lat > -12 && lat < 2 && lon > -83 && lon < -75) {
-    baseRegionalAnomaly = 60 + (step.step === 2 ? 80 : 30);
-  }
-  // Nordeste Brasileño y Amazonía (Teleconexión de déficit / sequía)
-  else if (lat > -15 && lat < 5 && lon > -55 && lon < -35) {
-    baseRegionalAnomaly = -35;
-  }
-  // Resto del mundo (modelo global proporcional a latitud tropical/subtropical)
-  else {
-    const isTropicalPacific = Math.abs(lat) < 20 && lon > -180 && lon < -80;
-    baseRegionalAnomaly = isTropicalPacific ? 50 : 15 * Math.cos((lat * Math.PI) / 90);
-  }
-
-  const finalAnomalyPercent = baseRegionalAnomaly * scenarioMultiplier;
-  const rainAnomalyRatio = Math.max(0, finalAnomalyPercent / 100);
+  // Ajuste de anomalía pluvial proporcional a la intensidad de la estela
+  const rainAnomalyPercent = Math.max(-20, (maxField * 110 - 10) * scenarioMultiplier);
+  const anomalyRatio = Math.max(0, rainAnomalyPercent / 100);
 
   return {
-    rainAnomalyPercent: finalAnomalyPercent,
-    rainAnomalyRatio
+    intensity: Math.min(1.0, maxField * scenarioMultiplier),
+    rainAnomalyPercent,
+    anomalyRatio
   };
 }
 
-/**
- * Estimación del relieve, pendientes y retención hídrica por ubicación
- */
 function estimateTopographyAndDrainage(lat, lon) {
-  // Cuenca del Salado bonaerense (Extremadamente plana, cota < 60m, pendiente < 0.3%)
-  const isSaladoBasin = lat < -34.5 && lat > -36.8 && lon > -62.5 && lon < -57.5;
-  // Sudeste Bonaerense / Necochea / Cuenca del Quequén (Pendiente suave hacia el mar, tosca a 50cm)
-  const isNecocheaQuequen = lat < -37.5 && lat > -39.0 && lon > -60.0 && lon < -58.2;
-  // Valle del Río Paraná / Delta
-  const isParanaValley = lat < -27.0 && lat > -34.5 && lon > -61.2 && lon < -59.5;
-  // Cordillera de los Andes (Pendiente muy alta, escurre de inmediato)
-  const isAndes = lon < -67.5 && lat < -22 && lat > -45;
+  // Cuencas y valles de drenaje continuo
+  const distSalado = Math.hypot((lat + 35.8) * 1.5, (lon + 60.0));
+  const distQuequen = Math.hypot((lat + 38.3) * 1.8, (lon + 59.0));
+  const distParana = Math.hypot((lat + 31.0) * 0.8, (lon + 60.5));
 
-  let slopeRisk = 40; // 0 = loma escurrida, 100 = depresión inundable
+  let slopeRisk = 35;
   let baseNapaM = 2.4;
-  let baseNormalRainMm = 85;
+  let baseNormalRainMm = 80;
   let retentionFactor = 1.0;
 
-  if (isSaladoBasin) {
-    slopeRisk = 85;
-    baseNapaM = 1.3;
-    baseNormalRainMm = 95;
-    retentionFactor = 1.4;
-  } else if (isNecocheaQuequen) {
-    slopeRisk = 65;
-    baseNapaM = 2.0;
-    baseNormalRainMm = 80;
-    retentionFactor = 1.25; // Tosca frena
-  } else if (isParanaValley) {
-    slopeRisk = 80;
-    baseNapaM = 1.1;
-    baseNormalRainMm = 115;
+  if (distSalado < 3.0) {
+    slopeRisk = 80 - distSalado * 12;
+    baseNapaM = 1.4;
     retentionFactor = 1.3;
-  } else if (isAndes) {
-    slopeRisk = 10;
-    baseNapaM = 5.0;
-    baseNormalRainMm = 20;
-    retentionFactor = 0.4;
+  } else if (distQuequen < 2.0) {
+    slopeRisk = 70 - distQuequen * 15;
+    baseNapaM = 1.9;
+    retentionFactor = 1.25; // Tosca somera
+  } else if (distParana < 2.5) {
+    slopeRisk = 75 - distParana * 12;
+    baseNapaM = 1.2;
+    retentionFactor = 1.35;
   }
 
   return {
-    slopeRisk,
+    slopeRisk: Math.max(10, Math.min(90, slopeRisk)),
     baseNapaM,
     baseNormalRainMm,
     retentionFactor
   };
 }
 
-/**
- * Calcula la distancia y el riesgo de desborde del río más cercano
- */
 function calculateRiverOverflowProximity(lat, lon, stepIndex, dischargeFactor) {
   let minDistanceKm = 9999;
   let closestRiver = MAJOR_RIVER_SYSTEMS[0];
 
   MAJOR_RIVER_SYSTEMS.forEach(river => {
     river.points.forEach(pt => {
-      // Conversión aproximada 1° lat ~ 111 km, 1° lon ~ 88 km en zona templada
       const dKm = Math.hypot((lat - pt[0]) * 111, (lon - pt[1]) * 88);
       if (dKm < minDistanceKm) {
         minDistanceKm = dKm;
@@ -359,13 +335,11 @@ function calculateRiverOverflowProximity(lat, lon, stepIndex, dischargeFactor) {
     });
   });
 
-  // Factor de crecida del río en la etapa temporal actual
   const isPeakForRiver = Math.abs(stepIndex - closestRiver.criticalPeakStep) <= 1;
   const peakMultiplier = isPeakForRiver ? 1.5 : 0.8;
   const flowIntensity = dischargeFactor * peakMultiplier;
 
-  // Riesgo disminuye con la distancia al cauce principal (dentro de 40 km hay influencia de llanura aluvial)
-  let proximityFactor = Math.max(0, 1 - (minDistanceKm / 40));
+  let proximityFactor = Math.max(0, 1 - (minDistanceKm / 45));
   let overflowRiskPercent = Math.min(100, Math.round(proximityFactor * flowIntensity * 65));
 
   return {
@@ -375,32 +349,14 @@ function calculateRiverOverflowProximity(lat, lon, stepIndex, dischargeFactor) {
   };
 }
 
-function getSimplifiedRiskStatus(floodRisk, riverRisk, isNecochea, stepIndex) {
+function getSimplifiedRiskStatus(floodRisk, riverRisk) {
   if (floodRisk >= 75 || riverRisk >= 75) {
-    return {
-      label: 'CRÍTICO / ALTO RIESGO DE INUNDACIÓN',
-      color: '#ef4444',
-      recommendation: isNecochea && stepIndex === 2
-        ? '¡Pico en Necochea! Mover hacienda de bajos a lomas; cosechar cebada/trigo de inmediato antes del temporal.'
-        : 'Saturación hídrica severa. Retirar maquinaria pesada de cubetas bajas y proteger accesos viales.'
-    };
+    return { label: 'CRÍTICO / ALTO RIESGO DE INUNDACIÓN', color: '#ef4444' };
   } else if (floodRisk >= 50) {
-    return {
-      label: 'ALERTA / RIESGO MODERADO A ALTO',
-      color: '#f59e0b',
-      recommendation: 'Ascenso rápido de napa. Monitorear desagües perimetrales y fraccionar nitrógeno para evitar lixiviación.'
-    };
+    return { label: 'ALERTA / RIESGO MODERADO A ALTO', color: '#f59e0b' };
   } else if (floodRisk >= 30) {
-    return {
-      label: 'VIGILANCIA / CONDICIONES HÚMEDAS',
-      color: '#3b82f6',
-      recommendation: 'Buena recarga de perfil de suelo. Condiciones favorables en lomas; vigilar pronósticos semanales.'
-    };
+    return { label: 'VIGILANCIA / CONDICIONES HÚMEDAS', color: '#3b82f6' };
   } else {
-    return {
-      label: 'BAJO RIESGO / DRENAJE SEGURO',
-      color: '#10b981',
-      recommendation: 'Sin riesgo inminente de anegamiento. Lotes transitables con óptima ventana operativa.'
-    };
+    return { label: 'BAJO RIESGO / DRENAJE SEGURO', color: '#10b981' };
   }
 }

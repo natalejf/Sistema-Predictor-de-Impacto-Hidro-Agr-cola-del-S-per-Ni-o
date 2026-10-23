@@ -1,5 +1,5 @@
 /**
- * SISTEMA PREDICTOR DE IMPACTO HIDRO-AGRÍCOLA DEL SÚPER NIÑO (SPIHA-Niño)
+ * SISTEMA DE PREDICCIÓN DEL SUPER NIÑO (SPSN)
  * Controlador Central y Manejador de Estado Reactivo
  */
 
@@ -8,11 +8,9 @@ import { TIMELINE_STEPS, evaluatePointConditions } from './simulation.js';
 import { generateTechnicalReportContent } from './agroEngine.js';
 import {
   initAgroMap,
-  flyToLocation,
   flyToCoordinates,
   updateSimulationTimeline,
-  toggleSatelliteBasemap,
-  setLayerMixerProperty
+  setActiveLayerMode
 } from './map.js';
 
 // Estado global de la aplicación
@@ -21,6 +19,7 @@ const AppState = {
   currentCoords: { lat: -38.5545, lon: -58.7396 },
   currentStepIndex: 0,
   currentScenario: 'super',
+  activeLayerMode: 'plume',
   isPlaying: false,
   playTimer: null,
   liveWeatherData: null,
@@ -32,6 +31,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   initUIEventListeners();
   await updateAllState(true);
 });
+
+/**
+ * Centra el mapa en una localidad clave
+ */
+function flyToLocation(key) {
+  const loc = KEY_LOCATIONS[key];
+  if (loc) {
+    flyToCoordinates(loc.lat, loc.lon, loc.zoom || 8);
+  }
+}
 
 /**
  * Inicializa el mapa y conecta los eventos de clic y cursor flotante
@@ -126,7 +135,6 @@ function updateInspectorUI(pred, live) {
   const inspRiver = document.getElementById('inspRiverVal');
   const inspTraffic = document.getElementById('inspTrafficVal');
   const inspNapa = document.getElementById('inspNapaVal');
-  const inspAdviceList = document.getElementById('inspAdviceList');
 
   const locInfo = AppState.currentLocationKey && KEY_LOCATIONS[AppState.currentLocationKey]
     ? KEY_LOCATIONS[AppState.currentLocationKey]
@@ -162,18 +170,6 @@ function updateInspectorUI(pred, live) {
   if (inspTraffic) inspTraffic.textContent = `${pred.trafficabilityLossDays} días/mes`;
   if (inspNapa) inspNapa.textContent = `${pred.napaDepthM} m`;
 
-  // Pautas directas para el productor
-  if (inspAdviceList) {
-    const isNec = pred.isNecocheaZone;
-    const isPeak = AppState.currentStepIndex === 2;
-
-    inspAdviceList.innerHTML = `
-      <li><strong>Cebada & Trigo:</strong> ${isPeak ? 'Trillar de inmediato al 14% de humedad; el temporal genera brotado en espiga y fusariosis.' : 'Monitorear sanidad de espiga y realizar fungicida doble anticipado.'}</li>
-      <li><strong>Maíz & Soja:</strong> ${pred.floodRiskPercent > 60 ? 'Fraccionar fertilización nitrogenada en lomas para evitar lixiviación; evitar siembras en cubetas.' : 'Aprovechar la alta oferta hídrica en lomas bien canalizadas.'}</li>
-      <li><strong>Logística & Hacienda:</strong> ${isNec ? 'Trasladar silo-bolsas a cabeceras de loma entoscadas con acceso firme hacia el Puerto Quequén.' : 'Retirar animales de cañadones y bajos ante riesgo de anegamiento repentino.'}</li>
-    `;
-  }
-
   // Actualizar telemetry pills de cabecera
   const elOni = document.getElementById('telemetryOniVal');
   if (elOni) elOni.textContent = `ONI: +${pred.oniIndex.toFixed(2)} °C`;
@@ -201,6 +197,42 @@ function updateTimelineUI(step) {
       tick.classList.remove('active');
     }
   });
+}
+
+/**
+ * Actualiza la leyenda inferior del mapa según la capa activa
+ */
+function updateMiniLegend(mode) {
+  const header = document.getElementById('miniLegendHeader');
+  const grad = document.getElementById('miniLegendGradient');
+  const labels = document.querySelectorAll('.mini-legend-labels span');
+  if (!header || !grad) return;
+
+  if (mode === 'plume') {
+    header.textContent = 'Tormenta del Súper Niño';
+    grad.style.background = 'linear-gradient(90deg, rgba(6,182,212,0.4), rgba(245,158,11,0.7), rgba(239,68,68,0.95))';
+    if (labels[0]) labels[0].textContent = 'Normal';
+    if (labels[1]) labels[1].textContent = 'Lluvias Fuertes';
+    if (labels[2]) labels[2].textContent = 'Tormenta Severa';
+  } else if (mode === 'flood') {
+    header.textContent = 'Riesgo de Inundación (Relieve)';
+    grad.style.background = 'linear-gradient(90deg, #06b6d4, #f59e0b, #ef4444)';
+    if (labels[0]) labels[0].textContent = 'Bajo (<25%)';
+    if (labels[1]) labels[1].textContent = 'Moderado (50%)';
+    if (labels[2]) labels[2].textContent = 'Crítico (>75%)';
+  } else if (mode === 'rivers') {
+    header.textContent = 'Caudal de Ríos y Cuencas';
+    grad.style.background = 'linear-gradient(90deg, #06b6d4, #f59e0b, #ef4444)';
+    if (labels[0]) labels[0].textContent = 'Caudal Normal';
+    if (labels[1]) labels[1].textContent = 'Alerta Crecida';
+    if (labels[2]) labels[2].textContent = 'Desborde Activo';
+  } else if (mode === 'satellite') {
+    header.textContent = 'Satélite Esri Alta Resolución';
+    grad.style.background = 'linear-gradient(90deg, #10b981, #06b6d4, #3b82f6)';
+    if (labels[0]) labels[0].textContent = 'Cobertura';
+    if (labels[1]) labels[1].textContent = 'Drenaje';
+    if (labels[2]) labels[2].textContent = 'Océano';
+  }
 }
 
 /**
@@ -292,11 +324,11 @@ function initUIEventListeners() {
   }
 
   // 3. Toggles de Cajones Laterales (Mobile & Desktop)
-  const panelMixer = document.getElementById('panelMixer');
+  const panelLayers = document.getElementById('panelLayers');
   const panelInspector = document.getElementById('panelInspector');
-  const btnToggleMixer = document.getElementById('btnToggleMixer');
+  const btnToggleLayers = document.getElementById('btnToggleLayers');
   const btnToggleInspector = document.getElementById('btnToggleInspector');
-  const btnCloseMixer = document.getElementById('btnCloseMixer');
+  const btnCloseLayers = document.getElementById('btnCloseLayers');
   const btnCloseInspector = document.getElementById('btnCloseInspector');
 
   const togglePanel = (panel, btn) => {
@@ -311,57 +343,28 @@ function initUIEventListeners() {
     }
   };
 
-  btnToggleMixer?.addEventListener('click', () => togglePanel(panelMixer, btnToggleMixer));
+  btnToggleLayers?.addEventListener('click', () => togglePanel(panelLayers, btnToggleLayers));
   btnToggleInspector?.addEventListener('click', () => togglePanel(panelInspector, btnToggleInspector));
-  btnCloseMixer?.addEventListener('click', () => togglePanel(panelMixer, btnToggleMixer));
+  btnCloseLayers?.addEventListener('click', () => togglePanel(panelLayers, btnToggleLayers));
   btnCloseInspector?.addEventListener('click', () => togglePanel(panelInspector, btnToggleInspector));
 
-  // 4. Mezclador de Capas (Switches y Sliders de Opacidad)
-  const chkFlood = document.getElementById('chkFloodHeatmap');
-  const rngFlood = document.getElementById('rngFloodOpacity');
-  const lblFlood = document.getElementById('lblFloodOpacity');
+  // 4. Selector de Capas Únicas (una por una)
+  const layerRadioButtons = document.querySelectorAll('.layer-radio-btn');
+  layerRadioButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-layer-mode');
+      if (!mode) return;
 
-  if (chkFlood && rngFlood) {
-    chkFlood.addEventListener('change', (e) => setLayerMixerProperty('floodHeatmap', 'enabled', e.target.checked));
-    rngFlood.addEventListener('input', (e) => {
-      const val = parseInt(e.target.value, 10) / 100;
-      if (lblFlood) lblFlood.textContent = `${e.target.value}%`;
-      setLayerMixerProperty('floodHeatmap', 'opacity', val);
+      layerRadioButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      AppState.activeLayerMode = mode;
+      setActiveLayerMode(mode);
+      updateMiniLegend(mode);
     });
-  }
+  });
 
-  const chkPlume = document.getElementById('chkEnsoPlume');
-  const rngPlume = document.getElementById('rngPlumeOpacity');
-  const lblPlume = document.getElementById('lblPlumeOpacity');
-
-  if (chkPlume && rngPlume) {
-    chkPlume.addEventListener('change', (e) => setLayerMixerProperty('ensoPlume', 'enabled', e.target.checked));
-    rngPlume.addEventListener('input', (e) => {
-      const val = parseInt(e.target.value, 10) / 100;
-      if (lblPlume) lblPlume.textContent = `${e.target.value}%`;
-      setLayerMixerProperty('ensoPlume', 'opacity', val);
-    });
-  }
-
-  const chkRiver = document.getElementById('chkRiverFlow');
-  const rngRiver = document.getElementById('rngRiverOpacity');
-  const lblRiver = document.getElementById('lblRiverOpacity');
-
-  if (chkRiver && rngRiver) {
-    chkRiver.addEventListener('change', (e) => setLayerMixerProperty('riverFlow', 'enabled', e.target.checked));
-    rngRiver.addEventListener('input', (e) => {
-      const val = parseInt(e.target.value, 10) / 100;
-      if (lblRiver) lblRiver.textContent = `${e.target.value}%`;
-      setLayerMixerProperty('riverFlow', 'opacity', val);
-    });
-  }
-
-  const chkSat = document.getElementById('chkSatellite');
-  if (chkSat) {
-    chkSat.addEventListener('change', (e) => toggleSatelliteBasemap(e.target.checked));
-  }
-
-  // 5. Selector de Escenarios
+  // 5. Selector de Escenarios ENSO
   document.querySelectorAll('.scenario-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
@@ -424,16 +427,7 @@ function initUIEventListeners() {
     }
   });
 
-  // 7. Modales de Guía e Informe
-  const guideModal = document.getElementById('guideModal');
-  const btnOpenGuide = document.getElementById('btnOpenGuideModal');
-  const btnCloseGuide = document.getElementById('btnCloseGuideModal');
-  const btnGotItGuide = document.getElementById('btnGotItGuide');
-
-  btnOpenGuide?.addEventListener('click', () => guideModal?.classList.remove('d-none'));
-  btnCloseGuide?.addEventListener('click', () => guideModal?.classList.add('d-none'));
-  btnGotItGuide?.addEventListener('click', () => guideModal?.classList.add('d-none'));
-
+  // 7. Modal de Informe Técnico
   const exportModal = document.getElementById('exportModal');
   const btnExport = document.getElementById('btnExportReport');
   const btnCloseExport = document.getElementById('btnCloseExportModal');

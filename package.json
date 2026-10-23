@@ -1,8 +1,9 @@
 {
-  "name": "sistema-predictor-impacto-hidro-agricola-super-nino",
+  "name": "sistema-de-prediccion-del-super-nino-spsn",
   "version": "1.0.0",
   "private": true,
-  "description": "Sistema Predictor de Impacto Hidro-Agrícola del Súper Niño",
+  "description": "Sistema de Predicción del Super Niño (SPSN)",
+  "author": "Juan Francisco Natale",
   "homepage": "https://natalejf.github.io/Sistema-Predictor-de-Impacto-Hidro-Agr-cola-del-S-per-Ni-o/",
   "repository": {
     "type": "git",
