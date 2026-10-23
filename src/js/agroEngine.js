@@ -223,11 +223,11 @@ export function generateTechnicalReportContent(prediction, liveData, locationInf
         </div>
         <div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
           <div style="font-size:0.7rem; color:#94a3b8;">ÍNDICE ONI DEL NIÑO</div>
-          <div style="font-size:0.95rem; font-weight:bold; color:#ef4444;">+${prediction.oniVal.toFixed(2)} °C (Súper Niño)</div>
+          <div style="font-size:0.95rem; font-weight:bold; color:#ef4444;">+${(prediction.oniIndex ?? prediction.oniVal ?? 2.4).toFixed(2)} °C (Súper Niño)</div>
         </div>
         <div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
           <div style="font-size:0.7rem; color:#94a3b8;">RIESGO HIDROLÓGICO</div>
-          <div style="font-size:0.95rem; font-weight:bold; color:#f59e0b;">${prediction.riskIndex}% (${prediction.riskLevel})</div>
+          <div style="font-size:0.95rem; font-weight:bold; color:#f59e0b;">${prediction.floodRiskPercent ?? prediction.riskIndex ?? 50}% (${prediction.statusLabel ?? prediction.riskLevel ?? 'ALERTA'})</div>
         </div>
       </div>
 
