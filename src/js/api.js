@@ -95,6 +95,42 @@ export const KEY_LOCATIONS = {
     basin: 'Cuenca del Río Cuarto / Chocancharava',
     soilType: 'Hapludol éntico con textura franco-arenosa',
     regionalVulnerability: 0.62
+  },
+  uruguay_salto: {
+    name: 'Salto / Paysandú (Litoral Uruguayo)',
+    lat: -31.3833,
+    lon: -57.9667,
+    elevation: 48,
+    basin: 'Bajo Río Uruguay (Alto riesgo de crecidas)',
+    soilType: 'Vertisol / Brunosol de gran fertilidad',
+    regionalVulnerability: 0.90
+  },
+  brasil_porto_alegre: {
+    name: 'Porto Alegre (Río Grande do Sul, Brasil)',
+    lat: -30.0346,
+    lon: -51.2177,
+    elevation: 10,
+    basin: 'Cuenca del Lago Guaíba / Jacuí',
+    soilType: 'Argisol aluvial muy susceptible a inundación histórica',
+    regionalVulnerability: 0.96
+  },
+  paraguay_asuncion: {
+    name: 'Asunción (Paraguay)',
+    lat: -25.2637,
+    lon: -57.5759,
+    elevation: 43,
+    basin: 'Valle del Río Paraguay',
+    soilType: 'Alfisol y sedimentos aluviales',
+    regionalVulnerability: 0.88
+  },
+  peru_piura: {
+    name: 'Piura (Costa Norte de Perú)',
+    lat: -5.1945,
+    lon: -80.6328,
+    elevation: 29,
+    basin: 'Cuenca del Río Piura (Epicentro de El Niño Costero)',
+    soilType: 'Fluvisol / Arenoso con riesgo de huaicos destructivos',
+    regionalVulnerability: 0.98
   }
 };
 
@@ -185,33 +221,32 @@ function averageRecent(arr) {
 }
 
 /**
- * Datos sintéticos realistas basados en geolocalización y climatología argentina
+ * Búsqueda de cualquier localidad del mundo / América Latina / Argentina
+ * usando la API pública y gratuita de Geocodificación de Open-Meteo
  */
-function generateSyntheticData(lat, lon) {
-  // Cuanto más al norte (latitud más cercana a 0), mayor temperatura
-  const baseTemp = 18 + Math.abs(lat + 40) * 0.7;
-  // Humedad más alta cerca de la costa o el litoral
-  const isCoastOrLitoral = lon > -61;
-  const baseHum = isCoastOrLitoral ? 78 : 64;
+export async function searchLocationByName(query) {
+  if (!query || query.trim().length < 2) return [];
 
-  return {
-    source: 'Modelo Calibrado Agroclima INTA/SMN',
-    isLive: false,
-    lat,
-    lon,
-    currentTemp: Math.round(baseTemp),
-    humidity: Math.round(baseHum),
-    windSpeed: 20,
-    currentPrecip: 0,
-    soilMoisturePercent: isCoastOrLitoral ? 88 : 72,
-    avgMoistureVolumetric: '0.345',
-    forecast7dRain: isCoastOrLitoral ? 62 : 38,
-    forecastDaily: Array.from({ length: 7 }).map((_, i) => ({
-      date: `Día +${i + 1}`,
-      maxTemp: Math.round(baseTemp + 4 + Math.sin(i) * 3),
-      minTemp: Math.round(baseTemp - 5 + Math.cos(i) * 2),
-      rain: i === 2 || i === 4 ? 25 : 2,
-      rainProb: i === 2 || i === 4 ? 80 : 25
-    }))
-  };
+  const cleanQuery = encodeURIComponent(query.trim());
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${cleanQuery}&count=6&language=es&format=json`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return [];
+    const data = await response.json();
+    return (data.results || []).map(r => ({
+      name: `${r.name}${r.admin1 ? ', ' + r.admin1 : ''}${r.country ? ' (' + r.country + ')' : ''}`,
+      simpleName: r.name,
+      lat: r.latitude,
+      lon: r.longitude,
+      elevation: r.elevation || 50,
+      country: r.country,
+      countryCode: r.country_code,
+      admin1: r.admin1
+    }));
+  } catch (err) {
+    console.warn('Error en geocodificación Open-Meteo:', err);
+    return [];
+  }
 }
+

@@ -37,23 +37,47 @@
         </div>
       </div>
 
+      <!-- Global & Regional Autocomplete Search Bar -->
+      <div class="location-search-box">
+        <div class="search-input-wrapper">
+          <svg class="icon-sm text-cyan search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="globalSearchInput" class="search-input" placeholder="Buscar cualquier ciudad, partido o país (ej: Necochea, Pergamino, Salto, Porto Alegre...)" autocomplete="off">
+          <button id="btnClearSearch" class="btn-clear-search d-none">&times;</button>
+        </div>
+        <div id="searchResultsDropdown" class="search-results-dropdown d-none"></div>
+      </div>
+
       <!-- Quick Location Selector -->
       <div class="location-quick-select">
         <label for="locationSelector" class="quick-label">
           <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          Región Clave:
+          Región:
         </label>
         <select id="locationSelector" class="form-select">
-          <option value="necochea" selected>📍 Necochea (Sudeste Bs.As. - Cuenca Quequén)</option>
-          <option value="tres_arroyos">📍 Tres Arroyos (Sur Pampeano)</option>
-          <option value="balcarce">📍 Balcarce / Tandil (Mar y Sierras)</option>
-          <option value="pergamino">📍 Pergamino (Zona Núcleo Norte)</option>
-          <option value="pehuajo">📍 Pehuajó / 9 de Julio (Cuenca Salado)</option>
-          <option value="venado_tuerto">📍 Venado Tuerto (Sur Santa Fe)</option>
-          <option value="rosario">📍 Rosario / Litoral Sur</option>
-          <option value="gualeguaychu">📍 Gualeguaychú (Entre Ríos)</option>
-          <option value="corrientes">📍 Corrientes (Litoral Norte)</option>
-          <option value="rio_cuarto">📍 Río Cuarto (Córdoba Sur)</option>
+          <optgroup label="Sudeste Bonaerense & Costa">
+            <option value="necochea" selected>📍 Necochea (Sudeste Bs.As. - Cuenca Quequén)</option>
+            <option value="tres_arroyos">📍 Tres Arroyos (Sur Pampeano)</option>
+            <option value="balcarce">📍 Balcarce / Tandil (Mar y Sierras)</option>
+          </optgroup>
+          <optgroup label="Zona Núcleo & Cuenca del Salado">
+            <option value="pergamino">📍 Pergamino (Zona Núcleo Norte)</option>
+            <option value="pehuajo">📍 Pehuajó / 9 de Julio (Cuenca Salado)</option>
+            <option value="venado_tuerto">📍 Venado Tuerto (Sur Santa Fe)</option>
+            <option value="rio_cuarto">📍 Río Cuarto (Córdoba Sur)</option>
+          </optgroup>
+          <optgroup label="Litoral & Cuenca del Plata">
+            <option value="rosario">📍 Rosario / Litoral Sur</option>
+            <option value="gualeguaychu">📍 Gualeguaychú (Entre Ríos)</option>
+            <option value="corrientes">📍 Corrientes (Alto Paraná)</option>
+          </optgroup>
+          <optgroup label="América Latina (ENSO Teleconexiones)">
+            <option value="uruguay_salto">📍 Salto / Paysandú (Uruguay)</option>
+            <option value="brasil_porto_alegre">📍 Porto Alegre (Río Grande do Sul)</option>
+            <option value="paraguay_asuncion">📍 Asunción (Paraguay)</option>
+            <option value="peru_piura">📍 Piura / Tumbes (Costa Norte Perú)</option>
+          </optgroup>
         </select>
         <button id="btnFocusNecochea" class="btn btn-outline-cyan btn-sm" title="Foco inmediato en Necochea">
           <span class="pulsing-dot"></span> Foco Necochea
@@ -327,15 +351,19 @@
       <div class="panel-tabs">
         <button class="panel-tab-btn active" data-tab="decisions">
           <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          Recomendaciones Agro
+          Recomendaciones
         </button>
         <button class="panel-tab-btn" data-tab="telemetry">
           <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          Gráficos & Series
+          Gráficos
         </button>
         <button class="panel-tab-btn" data-tab="necochea">
           <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-          Especial Necochea
+          Necochea
+        </button>
+        <button class="panel-tab-btn" data-tab="guide">
+          <svg class="icon-xs text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          ¿Cómo Leer?
         </button>
       </div>
 
@@ -447,6 +475,65 @@
               <li>Monitorear la napa con barreno o freatímetro casero semanalmente.</li>
               <li>Ajustar fertilización nitrogenada fraccionada en maíz para evitar lixiviación masiva.</li>
             </ol>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content 4: Guía de Interpretación para el Productor Agrícola -->
+      <div class="tab-pane" id="tabGuide">
+        <div class="pane-header">
+          <div>
+            <h3 class="pane-title">Manual de Uso & Lectura del Productor</h3>
+            <p class="pane-desc">Cómo interpretar cada indicador para tomar mejores decisiones</p>
+          </div>
+          <span class="badge-mini bg-amber-trans text-amber">GUÍA TÉCNICA</span>
+        </div>
+
+        <div class="guide-content-box">
+          <div class="guide-step-card">
+            <div class="guide-step-num">1</div>
+            <div class="guide-step-body">
+              <h4 class="guide-step-title">Búsqueda Libre o Clic en el Lote</h4>
+              <p>Puedes escribir en la barra superior <strong>cualquier localidad del mundo, América Latina o Argentina</strong> (ej. <em>Necochea, Pergamino, Salto, Río Cuarto</em>), o bien <strong>hacer clic directamente sobre tu campo o lote en el mapa</strong>. La sonda consultará la API de Open-Meteo en vivo para esas coordenadas exactas.</p>
+            </div>
+          </div>
+
+          <div class="guide-step-card">
+            <div class="guide-step-num">2</div>
+            <div class="guide-step-body">
+              <h4 class="guide-step-title">¿Qué significa el % de Riesgo Hidrológico?</h4>
+              <p>El indicador de <strong>Riesgo de Anegamiento (0 a 100%)</strong> combina 4 factores del lote:</p>
+              <ul class="guide-bullets">
+                <li><strong>Pendiente del terreno:</strong> Terrenos planos o bajos retienen el agua; las lomas escurren.</li>
+                <li><strong>Profundidad de Napa:</strong> A menos de 0.80 m hay riesgo inminente de asfixia radicular.</li>
+                <li><strong>Lluvias del Súper Niño:</strong> Volumen extra proyectado sobre la media histórica.</li>
+                <li><strong>Presencia de Tosca (en Necochea):</strong> Frena la infiltración profunda acelerando el encharcamiento superficial.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="guide-step-card">
+            <div class="guide-step-num">3</div>
+            <div class="guide-step-body">
+              <h4 class="guide-step-title">Lectura de Pérdida de Piso (Días/Mes)</h4>
+              <p>Son los días estimados en que el suelo estará saturado y <strong>ningún tractor, pulverizadora o cosechadora podrá ingresar sin encajarse o compactar severamente el lote</strong>. Si el valor supera 12 días, debes adelantar tratamientos fitosanitarios y asegurar contratos de flete con antelación.</p>
+            </div>
+          </div>
+
+          <div class="guide-step-card">
+            <div class="guide-step-num">4</div>
+            <div class="guide-step-body">
+              <h4 class="guide-step-title">Línea de Tiempo y Simulación</h4>
+              <p>Mueve el deslizador inferior desde el <strong>Mes Actual</strong> hasta <strong>+2 Meses (Enero/Febrero)</strong> para ver cómo evoluciona la tormenta y cuándo impactará con mayor fuerza en tu zona. Pulsa el botón <strong>Play</strong> para ver la animación continua.</p>
+            </div>
+          </div>
+
+          <div class="guide-step-card">
+            <div class="guide-step-num">5</div>
+            <div class="guide-step-body">
+              <h4 class="guide-step-title">Recomendaciones por Cultivo & Informe</h4>
+              <p>En la pestaña <strong>Recomendaciones</strong> verás alertas específicas para <em>Cebada, Trigo, Maíz, Soja, Girasol y Ganadería</em>. Con el botón superior <strong>"Informe Productor"</strong> puedes imprimir o generar un PDF con todo el diagnóstico para tu asesor agronómico.</p>
+            </div>
           </div>
         </div>
       </div>

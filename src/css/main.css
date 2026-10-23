@@ -200,6 +200,107 @@ code, .mono {
   font-weight: 500;
 }
 
+/* Global & Regional Autocomplete Search Bar */
+.location-search-box {
+  position: relative;
+  width: 310px;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: var(--bg-dark-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 4px 10px;
+  gap: 8px;
+  transition: all var(--trans-fast);
+}
+
+.search-input-wrapper:focus-within {
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.25);
+  background: var(--bg-dark-3);
+}
+
+.search-icon {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  color: var(--text-bright);
+  font-family: var(--font-main);
+  font-size: 0.78rem;
+  width: 100%;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: var(--text-dim);
+  font-size: 0.72rem;
+}
+
+.btn-clear-search {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0 4px;
+}
+.btn-clear-search:hover { color: #ffffff; }
+
+.search-results-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--bg-glass-heavy);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-active);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
+  z-index: 1500;
+}
+
+.search-result-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: background var(--trans-fast);
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background: rgba(6, 182, 212, 0.15);
+}
+
+.sr-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.sr-detail {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
 /* Location Selector in Header */
 .location-quick-select {
   display: flex;

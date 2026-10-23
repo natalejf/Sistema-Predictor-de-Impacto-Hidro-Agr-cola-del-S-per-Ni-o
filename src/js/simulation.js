@@ -149,6 +149,78 @@ export const AGRO_REGIONS = {
     toscaDepthCm: 180,
     drainageCapacity: 'Alta infiltración en suelos franco-arenosos',
     ensoResponseCurve: [0.50, 0.80, 0.90, 0.70, 0.30, 0.0]
+  },
+  noa_chaco: {
+    id: 'noa_chaco',
+    name: 'NOA & Chaco Seco/Húmedo (Salta, Tucumán, Santiago)',
+    center: [-26.5, -63.5],
+    elevationMsnm: 280,
+    slopePercent: 1.1,
+    baseWaterTableDepthM: 3.2,
+    historicalMonthlyRainMm: [90, 140, 160, 110, 30, 15],
+    toscaDepthCm: 300,
+    drainageCapacity: 'Variable; riesgo de crecidas aluvionales de montaña',
+    ensoResponseCurve: [0.60, 1.05, 1.15, 0.75, 0.20, 0.0]
+  },
+  cuyo_patagonia: {
+    id: 'cuyo_patagonia',
+    name: 'Cuyo & Comahue (Mendoza, San Juan, Río Negro)',
+    center: [-35.5, -68.5],
+    elevationMsnm: 750,
+    slopePercent: 3.5,
+    baseWaterTableDepthM: 4.5,
+    historicalMonthlyRainMm: [25, 35, 30, 20, 15, 10],
+    toscaDepthCm: 300,
+    drainageCapacity: 'Escurrimiento rápido hacia valles irrigados',
+    ensoResponseCurve: [0.40, 0.70, 0.85, 0.60, 0.20, 0.0]
+  },
+  uruguay_brasil_sur: {
+    id: 'uruguay_brasil_sur',
+    name: 'Uruguay & Río Grande do Sul (Cono Sur)',
+    center: [-31.5, -54.5],
+    elevationMsnm: 90,
+    slopePercent: 1.5,
+    baseWaterTableDepthM: 1.1,
+    historicalMonthlyRainMm: [120, 145, 140, 130, 85, 70],
+    toscaDepthCm: 220,
+    drainageCapacity: 'Riesgo crítico de inundación en cuencas del Río Negro y Uruguay',
+    ensoResponseCurve: [1.25, 1.30, 1.15, 0.90, 0.40, 0.0]
+  },
+  paraguay_chaco: {
+    id: 'paraguay_chaco',
+    name: 'Paraguay & Pantanal (Cuenca Alta del Plata)',
+    center: [-24.0, -57.5],
+    elevationMsnm: 110,
+    slopePercent: 0.5,
+    baseWaterTableDepthM: 1.0,
+    historicalMonthlyRainMm: [140, 165, 150, 135, 70, 45],
+    toscaDepthCm: 300,
+    drainageCapacity: 'Extremadamente lenta, desbordes masivos de ríos',
+    ensoResponseCurve: [1.35, 1.25, 1.05, 0.70, 0.25, -0.05]
+  },
+  costa_peru_ecuador: {
+    id: 'costa_peru_ecuador',
+    name: 'Costa de Perú & Ecuador (El Niño Costero)',
+    center: [-6.5, -79.5],
+    elevationMsnm: 40,
+    slopePercent: 2.2,
+    baseWaterTableDepthM: 1.8,
+    historicalMonthlyRainMm: [30, 80, 160, 110, 15, 5],
+    toscaDepthCm: 300,
+    drainageCapacity: 'Huaicos e inundaciones torrenciales destructivas',
+    ensoResponseCurve: [0.80, 1.40, 1.65, 1.20, 0.30, -0.10]
+  },
+  brasil_cerrado_norte: {
+    id: 'brasil_cerrado_norte',
+    name: 'Brasil Centro-Norte / Nordeste (Teleconexión Seca)',
+    center: [-12.0, -48.0],
+    elevationMsnm: 350,
+    slopePercent: 1.0,
+    baseWaterTableDepthM: 4.2,
+    historicalMonthlyRainMm: [180, 210, 190, 140, 30, 10],
+    toscaDepthCm: 300,
+    drainageCapacity: 'El Niño genera sequía / lluvias deficitarias en esta zona',
+    ensoResponseCurve: [-0.40, -0.65, -0.80, -0.50, -0.15, 0.0]
   }
 };
 
@@ -230,7 +302,7 @@ function getRiskLevelString(index) {
  * Calcula la predicción para coordenadas arbitrarias (cuando el usuario hace clic en el mapa)
  */
 export function calculatePointPrediction(lat, lon, stepIndex, scenarioKey = 'super') {
-  // Encontrar la región más cercana o interpolar
+  // Encontrar la región de referencia más cercana
   let closestRegion = AGRO_REGIONS.sudeste_ba;
   let minDistance = 999999;
 
@@ -242,17 +314,25 @@ export function calculatePointPrediction(lat, lon, stepIndex, scenarioKey = 'sup
     }
   }
 
-  // Si está muy cerca del mar en el sudeste (Necochea / Quequén)
+  // Si está en el hemisferio norte o zona ecuatorial/tropical
+  const isNorthernHemisphere = lat > 0;
   const isNecocheaCoast = lat < -38.0 && lat > -39.0 && lon > -59.5 && lon < -58.0;
 
   const result = calculateAgroPrediction(closestRegion.id, stepIndex, scenarioKey);
-  
+
   if (isNecocheaCoast) {
     result.customNote = 'Zona Costera Cuenca del Quequén Grande (Necochea): Mayor incidencia de brisa marina, nieblas y retención en bajos de tosca.';
+  } else if (closestRegion.id === 'costa_peru_ecuador') {
+    result.customNote = 'Pacífico Ecuatorial / Región Niño 1+2: Calentamiento marino anómalo directo y riesgo crítico de aluviones/huaicos.';
+  } else if (closestRegion.id === 'brasil_cerrado_norte') {
+    result.customNote = 'Teleconexión Seca del Súper Niño: Déficit pluvial en el noreste brasileño y Amazonía.';
+  } else if (isNorthernHemisphere) {
+    result.customNote = 'Hemisferio Norte: Teleconexiones del ENSO invertidas estacionalmente.';
   }
 
   return {
     ...result,
+    regionName: `Lote / Coordenadas (${lat.toFixed(2)}°, ${lon.toFixed(2)}°) [Ref: ${closestRegion.name}]`,
     isCustomPoint: true,
     lat: lat.toFixed(4),
     lon: lon.toFixed(4)

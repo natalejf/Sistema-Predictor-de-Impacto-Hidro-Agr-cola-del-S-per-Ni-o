@@ -167,13 +167,14 @@ const BASINS_PATHS = [
 export function initAgroMap(containerId, onPointSelected) {
   onPointSelectedCallback = onPointSelected;
 
-  // Centrado en el corazón agrícola de Argentina
+  // Mapa con alcance libre para Argentina, América Latina y global
   mapInstance = L.map(containerId, {
     center: [-36.8, -60.5],
     zoom: 6,
-    minZoom: 5,
-    maxZoom: 13,
-    zoomControl: false
+    minZoom: 2,
+    maxZoom: 18,
+    zoomControl: false,
+    worldCopyJump: true
   });
 
   // Control de Zoom personalizado en esquina superior derecha
@@ -253,6 +254,18 @@ export function flyToLocation(key) {
   });
 
   handleMapClick(loc.lat, loc.lon, key);
+}
+
+/**
+ * Vuela el mapa hacia cualquier coordenada arbitraria del mundo o Latinoamérica
+ */
+export function flyToCoordinates(lat, lon, zoom = 9) {
+  if (!mapInstance) return;
+  mapInstance.flyTo([lat, lon], zoom, {
+    duration: 1.5,
+    easeLinearity: 0.25
+  });
+  handleMapClick(lat, lon, null);
 }
 
 /**

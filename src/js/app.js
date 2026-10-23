@@ -3,13 +3,14 @@
  * Orquestador principal de estado, eventos, interfaz y sincronización de datos.
  */
 
-import { fetchLiveWeatherAndSoil, KEY_LOCATIONS } from './api.js';
+import { fetchLiveWeatherAndSoil, searchLocationByName, KEY_LOCATIONS } from './api.js';
 import { TIMELINE_STEPS, calculateAgroPrediction, calculatePointPrediction } from './simulation.js';
 import { generateAgroAdvisory, generateTechnicalReportContent } from './agroEngine.js';
 import { renderAllCharts } from './charts.js';
 import {
   initAgroMap,
   flyToLocation,
+  flyToCoordinates,
   updateMapSimulationState,
   toggleSatelliteBasemap,
   toggleBasinsLayer,
@@ -402,6 +403,85 @@ function initUIEventListeners() {
     });
   }
 
+  // Buscador predictivo global y regional
+  const searchInput = document.getElementById('globalSearchInput');
+  const searchDropdown = document.getElementById('searchResultsDropdown');
+  const btnClearSearch = document.getElementById('btnClearSearch');
+  let searchDebounceTimer = null;
+
+  if (searchInput && searchDropdown) {
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value.trim();
+      if (q.length > 0 && btnClearSearch) {
+        btnClearSearch.classList.remove('d-none');
+      } else if (btnClearSearch) {
+        btnClearSearch.classList.add('d-none');
+      }
+
+      clearTimeout(searchDebounceTimer);
+      if (q.length < 2) {
+        searchDropdown.classList.add('d-none');
+        searchDropdown.innerHTML = '';
+        return;
+      }
+
+      searchDebounceTimer = setTimeout(async () => {
+        searchDropdown.innerHTML = '<div style="padding:10px; font-size:0.75rem; color:#94a3b8;">Buscando en API Open-Meteo...</div>';
+        searchDropdown.classList.remove('d-none');
+
+        const results = await searchLocationByName(q);
+        if (results.length === 0) {
+          searchDropdown.innerHTML = '<div style="padding:10px; font-size:0.75rem; color:#94a3b8;">No se encontraron localidades. Intenta con otro nombre.</div>';
+          return;
+        }
+
+        searchDropdown.innerHTML = results.map(item => `
+          <div class="search-result-item" data-lat="${item.lat}" data-lon="${item.lon}" data-name="${item.name}">
+            <span class="sr-name">📍 ${item.simpleName}</span>
+            <span class="sr-detail">
+              <span>${item.admin1 || ''} ${item.country ? '· ' + item.country : ''}</span>
+              <span class="text-cyan">Elev: ${Math.round(item.elevation)} m</span>
+            </span>
+          </div>
+        `).join('');
+
+        searchDropdown.querySelectorAll('.search-result-item').forEach(itemEl => {
+          itemEl.addEventListener('click', async () => {
+            const lat = parseFloat(itemEl.getAttribute('data-lat'));
+            const lon = parseFloat(itemEl.getAttribute('data-lon'));
+            const name = itemEl.getAttribute('data-name');
+
+            searchInput.value = name;
+            searchDropdown.classList.add('d-none');
+
+            // Volar y seleccionar coordenadas en el mapa
+            AppState.currentLocationKey = null;
+            AppState.currentCoords = { lat, lon };
+            if (locationSelect) locationSelect.value = '';
+
+            flyToCoordinates(lat, lon, 9);
+            await updateAllState(false);
+          });
+        });
+      }, 350);
+    });
+
+    if (btnClearSearch) {
+      btnClearSearch.addEventListener('click', () => {
+        searchInput.value = '';
+        searchDropdown.classList.add('d-none');
+        btnClearSearch.classList.add('d-none');
+      });
+    }
+
+    // Ocultar dropdown al hacer clic afuera
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+        searchDropdown.classList.add('d-none');
+      }
+    });
+  }
+
   // Tabs del panel lateral derecho
   document.querySelectorAll('.panel-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -413,6 +493,7 @@ function initUIEventListeners() {
       if (tabTarget === 'decisions') document.getElementById('tabDecisions')?.classList.add('active');
       else if (tabTarget === 'telemetry') document.getElementById('tabTelemetry')?.classList.add('active');
       else if (tabTarget === 'necochea') document.getElementById('tabNecochea')?.classList.add('active');
+      else if (tabTarget === 'guide') document.getElementById('tabGuide')?.classList.add('active');
     });
   });
 
