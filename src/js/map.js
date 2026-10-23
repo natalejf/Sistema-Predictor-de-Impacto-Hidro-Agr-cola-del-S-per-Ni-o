@@ -19,8 +19,10 @@ let probeMarker = null;
 
 let onPointSelectedCallback = null;
 
-// Cartografía base
-const BASEMAP_DARK = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+// Cartografía base con API Key oficial de CARTO
+const CARTO_API_KEY = 'cb1_4t35_1_088aa67124f70f9d382d1599';
+const BASEMAP_DARK = `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=${CARTO_API_KEY}`;
+const BASEMAP_VOYAGER = `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=${CARTO_API_KEY}`;
 const BASEMAP_SATELLITE = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 
 // Geometría aproximada de las cuencas y regiones agropecuarias argentinas
